@@ -2,26 +2,43 @@ package models
 
 import "time"
 
-type MovieType string
+type FilmType string
+type SeriesStatus string
 
 const (
-	Movie  = "movie"
-	Series = "series"
+	Movie  FilmType = "movie"
+	Series FilmType = "series"
+
+	ReturningSeries SeriesStatus = "Returning Series"
+	Ended           SeriesStatus = "Ended"
+	InProduction    SeriesStatus = "In Production"
+	Canceled        SeriesStatus = "Canceled"
+	Planned         SeriesStatus = "Planned"
 )
 
-type BasicFilm struct {
-	MovId       int64     `json:"movId"`
-	ImdbId      string    `json:"imdbId"`
-	Title       string    `json:"title"`
-	Type        MovieType `json:"type"`
-	Genres      []string  `json:"genres"`
-	ReleaseDate time.Time `json:"releaseDate"`
-
-	Plot      string  `json:"plot"`
-	PosterUrl string  `json:"posterUrl"`
-	Rating    float32 `json:"rating"`
+type FilmSeries struct {
+	Film
+	Status        SeriesStatus `json:"status"`
+	TotalSeasons  []int        `json:"total_seasons"`
+	TotalEpisodes []int        `json:"total_episodes"`
 }
 
-func NewBasicFilm() BasicFilm {
-	return BasicFilm{}
+type Film struct {
+	FilmId int    `json:"film_id"`
+	TmdbId int    `json:"tmdb_id"`
+	ImdbId string `json:"imdb_id"`
+
+	Title       string    `json:"title"`
+	Type        FilmType  `json:"type"`
+	Genres      []string  `json:"genres"`
+	ReleaseDate time.Time `json:"release_date"`
+	Runtime     int       `json:"runtime"`
+
+	Overview  string   `json:"overview"`
+	PosterUrl string   `json:"poster_url"`
+	Rating    float32  `json:"rating"`
+	Director  string   `json:"director"`
+	MainCasts []string `json:"main_casts"`
+
+	Keywords []string `json:"keywords"`
 }

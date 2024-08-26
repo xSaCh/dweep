@@ -1,0 +1,28 @@
+TV Status - Watched/ Watching/ Plan to Watch/ On Hold/ Dropped
+Movie Status - Watched/ Plan to Watch/ Dropped
+
+Follow lists -> notificaitons if lists updates
+Priority on based of moods
+
+My List
+    film_id
+    type -> Movie/Series
+    title
+    status -> "Movie Status"
+    genres
+    overview
+    director
+    main_casts
+    release_date
+    rating
+    runtime
+    
+    my_tags
+    no_of_timed_watched
+    my_rating
+    suggested_by = []
+    
+    Series
+        no_of_seasons
+        fully_watched_seasons = []
+        watched_episodes
