@@ -45,7 +45,7 @@ func NewTmdbApi(apiKey string) *TmdbApi {
 // }
 
 func (api *TmdbApi) GetMovie(tmdbId string) *models.Film {
-	res, err := http.Get(TmdbBaseUrl + "movie/" + tmdbId + "?api_key=" + api.apiKey + "&append_to_response=external_ids,keywords")
+	res, err := http.Get(TmdbBaseUrl + "movie/" + tmdbId + "?api_key=" + api.apiKey + "&append_to_response=external_ids,keywords,casts")
 	if err != nil {
 		return nil
 	}
@@ -73,12 +73,33 @@ func (api *TmdbApi) GetMovie(tmdbId string) *models.Film {
 		keywords = append(keywords, v.(map[string]interface{})["name"].(string))
 	}
 
+	casts := []string{}
+	director := ""
+	cM := jsData["casts"].(map[string]interface{})
+	if cM["cast"] != nil {
+		for i, v := range cM["cast"].([]interface{}) {
+
+			casts = append(casts, v.(map[string]interface{})["name"].(string))
+			if i == 3 {
+				break
+			}
+		}
+	}
+	if cM["crew"] != nil {
+		for _, v := range cM["crew"].([]interface{}) {
+			if v.(map[string]interface{})["job"].(string) == "Director" {
+				director = v.(map[string]interface{})["name"].(string)
+				break
+			}
+		}
+	}
+
 	releaseDate, _ := time.Parse(time.DateOnly, jsData["release_date"].(string))
 
 	return &models.Film{
 		TmdbId:      int(jsData["id"].(float64)),
 		ImdbId:      imdbId,
-		Title:       jsData["original_title"].(string),
+		Title:       jsData["title"].(string),
 		Type:        models.Movie,
 		Genres:      genres,
 		ReleaseDate: releaseDate,
@@ -88,7 +109,7 @@ func (api *TmdbApi) GetMovie(tmdbId string) *models.Film {
 		Rating:      float32(jsData["vote_average"].(float64)),
 		Keywords:    keywords,
 
-		Director:  "",
-		MainCasts: []string{},
+		Director:  director,
+		MainCasts: casts,
 	}
 }

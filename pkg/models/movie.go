@@ -1,6 +1,11 @@
 package models
 
-import "time"
+import (
+	"fmt"
+	"reflect"
+	"strings"
+	"time"
+)
 
 type FilmType string
 type SeriesStatus string
@@ -41,4 +46,15 @@ type Film struct {
 	MainCasts []string `json:"main_casts"`
 
 	Keywords []string `json:"keywords"`
+}
+
+func (f *Film) String() string {
+	v1 := reflect.ValueOf(*f)
+
+	sb := strings.Builder{}
+	for i := 0; i < v1.NumField(); i++ {
+		field1 := v1.Field(i).Interface()
+		sb.WriteString(fmt.Sprintf("'%v': %v\n", v1.Type().Field(i).Name, field1))
+	}
+	return sb.String()
 }
