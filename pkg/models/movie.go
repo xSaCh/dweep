@@ -24,8 +24,8 @@ const (
 type FilmSeries struct {
 	Film
 	Status        SeriesStatus `json:"status"`
-	TotalSeasons  []int        `json:"total_seasons"`
-	TotalEpisodes []int        `json:"total_episodes"`
+	TotalSeasons  int          `json:"total_seasons"`
+	TotalEpisodes int          `json:"total_episodes"`
 }
 
 type Film struct {
@@ -38,12 +38,12 @@ type Film struct {
 	Genres      []string  `json:"genres"`
 	ReleaseDate time.Time `json:"release_date"`
 	Runtime     int       `json:"runtime"`
-
-	Overview  string   `json:"overview"`
-	PosterUrl string   `json:"poster_url"`
-	Rating    float32  `json:"rating"`
-	Director  string   `json:"director"`
-	MainCasts []string `json:"main_casts"`
+	AgeRating   string    `json:"age_rating"`
+	Overview    string    `json:"overview"`
+	PosterUrl   string    `json:"poster_url"`
+	Rating      float32   `json:"rating"`
+	Director    string    `json:"director"`
+	MainCasts   []string  `json:"main_casts"`
 
 	Keywords []string `json:"keywords"`
 }
