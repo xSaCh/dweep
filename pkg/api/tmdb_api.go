@@ -55,7 +55,7 @@ func (api *TmdbApi) GetMovie(tmdbId string) *models.Film {
 	var jsData map[string]interface{}
 	json.Unmarshal(data, &jsData)
 
-	if jsData["success"] != nil && !jsData["success"].(bool) {
+	if sB, ok := jsData["success"].(bool); ok && !sB {
 		return nil
 	}
 
@@ -66,37 +66,34 @@ func (api *TmdbApi) GetMovie(tmdbId string) *models.Film {
 	}
 
 	imdbId := ""
-	if jsData["external_ids"] != nil {
-		eIds := jsData["external_ids"].(map[string]interface{})
+	if eIds, ok := jsData["external_ids"].(map[string]interface{}); ok {
 		if eIds["imdb_id"] != nil {
 			imdbId = eIds["imdb_id"].(string)
 		}
 	}
 
 	keywords := []string{}
-	if jsData["keywords"] != nil {
-		kM := jsData["keywords"].(map[string]interface{})["keywords"].([]interface{})
+	if k, ok := jsData["keywords"].(map[string]interface{}); ok {
+		kM := k["keywords"].([]interface{})
 		for _, v := range kM {
 			keywords = append(keywords, v.(map[string]interface{})["name"].(string))
 		}
 	}
-	TheatricalRelease := 3.0
 
 	casts := []string{}
 	director := ""
-	if jsData["credits"] != nil {
-		cM := jsData["credits"].(map[string]interface{})
-		if cM["cast"] != nil {
-			for i, v := range cM["cast"].([]interface{}) {
+	if cM, ok := jsData["credits"].(map[string]interface{}); ok {
 
-				casts = append(casts, v.(map[string]interface{})["name"].(string))
-				if i == 3 {
+		if casts, cOk := cM["cast"].([]interface{}); cOk {
+			for i, v := range casts {
+				if i == 4 {
 					break
 				}
+				casts = append(casts, v.(map[string]interface{})["name"].(string))
 			}
 		}
-		if cM["crew"] != nil {
-			for _, v := range cM["crew"].([]interface{}) {
+		if crews, crOk := cM["crew"].([]interface{}); crOk {
+			for _, v := range crews {
 				if v.(map[string]interface{})["job"].(string) == "Director" {
 					director = v.(map[string]interface{})["name"].(string)
 					break
@@ -106,13 +103,12 @@ func (api *TmdbApi) GetMovie(tmdbId string) *models.Film {
 	}
 
 	ageRating := ""
-	if jsData["release_dates"] != nil {
-		cM := jsData["release_dates"].(map[string]interface{})
+	if cM, ok := jsData["release_dates"].(map[string]interface{}); ok {
 		for _, v := range cM["results"].([]interface{}) {
 			if v.(map[string]interface{})["iso_3166_1"].(string) == "US" {
 				rM := v.(map[string]interface{})["release_dates"].([]interface{})
 				for _, vr := range rM {
-					if vr.(map[string]interface{})["type"].(float64) == TheatricalRelease {
+					if vr.(map[string]interface{})["type"].(float64) == 3 {
 						ageRating = vr.(map[string]interface{})["certification"].(string)
 						break
 					}
@@ -154,7 +150,7 @@ func (api *TmdbApi) GetSeries(tmdbId string) *models.FilmSeries {
 	var jsData map[string]interface{}
 	json.Unmarshal(data, &jsData)
 
-	if jsData["success"] != nil && !jsData["success"].(bool) {
+	if sB, ok := jsData["success"].(bool); ok && !sB {
 		return nil
 	}
 
@@ -165,16 +161,15 @@ func (api *TmdbApi) GetSeries(tmdbId string) *models.FilmSeries {
 	}
 
 	imdbId := ""
-	if jsData["external_ids"] != nil {
-		eIds := jsData["external_ids"].(map[string]interface{})
+	if eIds, ok := jsData["external_ids"].(map[string]interface{}); ok {
 		if eIds["imdb_id"] != nil {
 			imdbId = eIds["imdb_id"].(string)
 		}
 	}
 
 	keywords := []string{}
-	if jsData["keywords"] != nil {
-		kM := jsData["keywords"].(map[string]interface{})["results"].([]interface{})
+	if k, ok := jsData["keywords"].(map[string]interface{}); ok {
+		kM := k["results"].([]interface{})
 		for _, v := range kM {
 			keywords = append(keywords, v.(map[string]interface{})["name"].(string))
 		}
@@ -182,19 +177,18 @@ func (api *TmdbApi) GetSeries(tmdbId string) *models.FilmSeries {
 
 	casts := []string{}
 	director := ""
-	if jsData["credits"] != nil {
-		cM := jsData["credits"].(map[string]interface{})
-		if cM["cast"] != nil {
-			for i, v := range cM["cast"].([]interface{}) {
+	if cM, ok := jsData["credits"].(map[string]interface{}); ok {
 
+		if casts, cOk := cM["cast"].([]interface{}); cOk {
+			for i, v := range casts {
 				casts = append(casts, v.(map[string]interface{})["name"].(string))
 				if i == 3 {
 					break
 				}
 			}
 		}
-		if cM["crew"] != nil {
-			for _, v := range cM["crew"].([]interface{}) {
+		if crews, crOk := cM["crew"].([]interface{}); crOk {
+			for _, v := range crews {
 				if v.(map[string]interface{})["job"].(string) == "Director" {
 					director = v.(map[string]interface{})["name"].(string)
 					break
@@ -204,8 +198,7 @@ func (api *TmdbApi) GetSeries(tmdbId string) *models.FilmSeries {
 	}
 
 	ageRating := ""
-	if jsData["content_ratings"] != nil {
-		cM := jsData["content_ratings"].(map[string]interface{})
+	if cM, ok := jsData["content_ratings"].(map[string]interface{}); ok {
 		for _, v := range cM["results"].([]interface{}) {
 			if v.(map[string]interface{})["iso_3166_1"].(string) == "US" {
 				ageRating = v.(map[string]interface{})["rating"].(string)
