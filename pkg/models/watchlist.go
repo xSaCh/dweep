@@ -22,27 +22,35 @@ const (
 	OnHold      WatchStatus = "on_hold"  // Generally for series
 )
 
-type Watchlist struct {
-	Film
-	MyRating    float32     `json:"my_rating"`
+type FilmWatchlistItem struct {
+	WatchlistItemId int      `json:"watchlist_item_id"`
+	FilmId          int      `json:"film_id"`
+	UserId          int      `json:"user_id"`
+	Type            FilmType `json:"type"`
+
+	MyRating    float32     `json:"my_rating"` // 0 means not rated
 	MyTags      []string    `json:"my_tags"`
 	WatchStatus WatchStatus `json:"watch_status"`
 
-	Note          string      `json:"note"`
-	RecommendedBy []string    `json:"recommended_by"`
-	WhenToWatch   WhenToWatch `json:"when_to_watch"`
+	Note          string  `json:"note"`
+	RecommendedBy []int64 `json:"recommended_by"`
+
+	AddedOn   time.Time `json:"added_on"`
+	UpdatedOn time.Time `json:"updated_on"`
+	// WhenToWatch   WhenToWatch `json:"when_to_watch"`
 }
-type WatchlistMovie struct {
-	Watchlist
+type FilmWatchlistItemMovie struct {
+	FilmWatchlistItem
 	WatchedDates []time.Time `json:"watched_dates"`
 	// TimedWatched
 }
+type FilmWatchlistItemSeries struct {
+	FilmWatchlistItem
+	FullyWatchedSeasons []int            `json:"fully_watched_seasons"` // Season_IDs
+	WatchedEpisodes     []WatchedEpisode `json:"watched_episodes"`
+}
+
 type WatchedEpisode struct {
 	EpisodeId   int64     `json:"episode_id"`
 	WatchedDate time.Time `json:"watched_date"`
-}
-type WatchlistSeries struct {
-	Watchlist
-	FullyWatchedSeasons []int            `json:"fully_watched_seasons"`
-	WatchedEpisodes     []WatchedEpisode `json:"watched_episodes"`
 }

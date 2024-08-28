@@ -4,6 +4,34 @@ Movie Status - Watched/ Plan to Watch/ Dropped
 Follow lists -> notificaitons if lists updates
 Priority on based of moods
 
+API
+    CRUD film to watchlist
+    CRUD film to collection
+    CRUD film to favorite
+
+    Access public collection
+    Access shared collection
+
+Functionality
+    Managed User and authentication
+    add/remove movie to watchlist , watched list, favorite and user-defined collection
+    add/remove rating, tags
+
+    search by keywords/genre/release-date range/rating
+
+    progress tracker
+
+Collection
+    collection_id
+    owner_id
+    is_public
+
+    films
+        film_id
+        added_on
+        added_by
+
+
 My List
     film_id
     type -> Movie/Series
@@ -26,3 +54,19 @@ My List
         no_of_seasons
         fully_watched_seasons = []
         watched_episodes
+
+
+What I want to do
+    add movie to watchlist
+        recommended by 
+        notes
+        tags
+        watchStatus is "Watched" then when
+    
+    add series to watchlist
+        recommended by 
+        notes
+        tags
+        which seasons fully watched
+        which episoded watched
+        

@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"reflect"
+	"time"
 
-	"github.com/xSaCh/dweep/pkg/api"
 	"github.com/xSaCh/dweep/pkg/mocks"
+	"github.com/xSaCh/dweep/pkg/models"
+	"github.com/xSaCh/dweep/pkg/storage"
 )
 
 const (
@@ -14,32 +16,46 @@ const (
 )
 
 func main() {
-	ta := api.NewTmdbApi(TMDB_API_KEY)
-	m := *ta.GetMovie("550")
-	// for _, v := range m.Keywords {
-	// 	fmt.Println(v)
-	// }
-	// fmt.Println(m)
-	// fmt.Println(mocks.MovieFilms[0])
 
-	CompareStructField(m, mocks.MovieFilms[0])
-}
+	// ta := api.NewTmdbApi(TMDB_API_KEY)
+	// m := *ta.GetSeries("65784")
+	// m := *ta.GetMovie("534780")
+	memStore := storage.NewMemoryStore()
 
-func CompareStructField(s1, s2 interface{}) {
-	v1 := reflect.ValueOf(s1)
-	v2 := reflect.ValueOf(s2)
-
-	if v1.Type() != v2.Type() {
-		panic("Cannot compare structs of different types")
+	f1 := models.DBFilmWatchlistItem{
+		FilmId:        mocks.MovieFilms[0].FilmId,
+		Type:          mocks.MovieFilms[0].Type,
+		MyRating:      4,
+		MyTags:        []string{},
+		WatchStatus:   models.Watched,
+		Note:          "",
+		RecommendedBy: []int64{},
+		WatchedDate:   time.Now(),
+	}
+	f2 := models.DBFilmWatchlistItem{
+		FilmId:        mocks.MovieFilms[2].FilmId,
+		Type:          mocks.MovieFilms[2].Type,
+		MyRating:      0,
+		MyTags:        []string{"Q"},
+		WatchStatus:   models.PlanToWatch,
+		Note:          "N",
+		RecommendedBy: []int64{2},
 	}
 
-	for i := 0; i < v1.NumField(); i++ {
-		field1 := v1.Field(i).Interface()
-		field2 := v2.Field(i).Interface()
+	var st storage.Storage = memStore
 
-		if !reflect.DeepEqual(field1, field2) {
-			fmt.Printf("%v != %v\n", field1, field2)
-		}
-	}
+	st.AddFilm(f1, 1)
+	st.AddFilm(f2, 1)
+	f, _ := st.GetAllMovies(1)
+	b, _ := json.MarshalIndent(f[1], "", "  ")
+	fmt.Println(string(b))
+
+	f2.WatchStatus = models.Watched
+	f2.MyRating = 5
+	st.UpdateFilm(f2, 1)
+	st.RemoveFilm(f1.FilmId, 1)
+	f, _ = st.GetAllMovies(1)
+	b, _ = json.MarshalIndent(f, "", "  ")
+	fmt.Println(string(b))
 
 }

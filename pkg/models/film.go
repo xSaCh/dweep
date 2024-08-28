@@ -21,13 +21,6 @@ const (
 	Planned         SeriesStatus = "Planned"
 )
 
-type FilmSeries struct {
-	Film
-	Status        SeriesStatus `json:"status"`
-	TotalSeasons  int          `json:"total_seasons"`
-	TotalEpisodes int          `json:"total_episodes"`
-}
-
 type Film struct {
 	FilmId int    `json:"film_id"`
 	TmdbId int    `json:"tmdb_id"`
@@ -46,6 +39,17 @@ type Film struct {
 	MainCasts   []string  `json:"main_casts"`
 
 	Keywords []string `json:"keywords"`
+}
+
+type FilmSeries struct {
+	Film
+	Status        SeriesStatus `json:"status"`
+	TotalSeasons  int          `json:"total_seasons"`
+	TotalEpisodes int          `json:"total_episodes"`
+}
+
+type FilmMovie struct {
+	Film
 }
 
 func (f *Film) String() string {
