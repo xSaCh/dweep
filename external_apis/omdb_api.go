@@ -1,4 +1,4 @@
-package api
+package externalapi
 
 // import (
 // 	"encoding/json"

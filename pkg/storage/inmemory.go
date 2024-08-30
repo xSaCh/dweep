@@ -36,7 +36,7 @@ func (m *MemoryStore) AddFilm(item models.DBFilmWatchlistItem, userId int) error
 		AddedOn:   time.Now(),
 		UpdatedOn: time.Now()}
 
-	if item.Type == models.Movie {
+	if item.Type == models.TypeMovie {
 		fi.WatchlistItemId = len(m.mW) + 1
 		watchedD := []time.Time{}
 		if item.WatchStatus == models.Watched {
@@ -53,7 +53,7 @@ func (m *MemoryStore) AddFilm(item models.DBFilmWatchlistItem, userId int) error
 }
 
 func (m *MemoryStore) UpdateFilm(item models.DBFilmWatchlistItem, userId int) error {
-	if item.Type == models.Series {
+	if item.Type == models.TypeShow {
 		return errors.New("not implemented")
 	}
 	for i, it := range m.mW {

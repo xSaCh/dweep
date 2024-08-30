@@ -11,14 +11,14 @@ type FilmType string
 type SeriesStatus string
 
 const (
-	Movie  FilmType = "movie"
-	Series FilmType = "series"
+	TypeMovie FilmType = "movie"
+	TypeShow  FilmType = "show"
 
-	ReturningSeries SeriesStatus = "Returning Series"
-	Ended           SeriesStatus = "Ended"
-	InProduction    SeriesStatus = "In Production"
-	Canceled        SeriesStatus = "Canceled"
-	Planned         SeriesStatus = "Planned"
+	ShowStatusReturningSeries SeriesStatus = "Returning Series"
+	ShowStatusEnded           SeriesStatus = "Ended"
+	ShowStatusInProduction    SeriesStatus = "In Production"
+	ShowStatusCanceled        SeriesStatus = "Canceled"
+	ShowStatusPlanned         SeriesStatus = "Planned"
 )
 
 type Film struct {

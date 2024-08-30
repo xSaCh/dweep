@@ -56,17 +56,34 @@ My List
         watched_episodes
 
 
-What I want to do
-    add movie to watchlist
-        recommended by 
-        notes
-        tags
-        watchStatus is "Watched" then when
+Add movie to watchlist
+    recommended by 
+    notes
+    tags
+    watchStatus is "Watched" then when
+
+Add series to watchlist
+    recommended by 
+    notes
+    tags
+    which seasons fully watched
+    which episodes watched
+        add all episodes of fully watched seasons also
+
+
+Movie
+    watched
+        Right now / specific date
+    watchlist
+
+List
+    List_id
+    id          := dweep_id
+    type        := movie/show/season/episode/
+    description
     
-    add series to watchlist
-        recommended by 
-        notes
-        tags
-        which seasons fully watched
-        which episoded watched
-        
+    List Items
+        id          := dweep_id
+        type        := movie/show/season/episode/
+        addedon
+        order

@@ -1,7 +1,8 @@
-package api
+package externalapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -22,29 +23,7 @@ func NewTmdbApi(apiKey string) *TmdbApi {
 	return &TmdbApi{apiKey: apiKey}
 }
 
-// func (api *TmdbApi) SearchFilmByTitle(title string, seaechFilter *SearchFilter) []models.BasicFilm {
-// 	print("Getting... ", TMDB_BASE_URL+"/search/movie?api_key="+api.apiKey+"&query="+title)
-// 	res, err := http.Get(TMDB_BASE_URL + "/search/movie?api_key=" + api.apiKey + "&query=" + title)
-// 	if err != nil {
-// 		return []models.BasicFilm{}
-// 	}
-// 	defer res.Body.Close()
-
-// 	data, _ := io.ReadAll(res.Body)
-// 	var jsData map[string]interface{}
-// 	json.Unmarshal(data, &jsData)
-
-// 	// var films []models.BasicFilm
-// 	// for _, v := range jsData["results"].([]interface{})  {
-// 	// 	films = append(films, models.BasicFilm{
-// 	// 		// ImdbId: v['i'],
-// 	// 	})
-// 	// }
-// 	return []models.BasicFilm{}
-
-// }
-
-func (api *TmdbApi) GetMovie(tmdbId string) *models.Film {
+func (api *TmdbApi) GetMovie(tmdbId string) *models.Movie {
 	res, err := http.Get(TmdbBaseUrl + "movie/" + tmdbId + "?api_key=" + api.apiKey + "&append_to_response=external_ids,keywords,credits,release_dates")
 	if err != nil {
 		return nil
@@ -80,7 +59,7 @@ func (api *TmdbApi) GetMovie(tmdbId string) *models.Film {
 		}
 	}
 
-	casts := []string{}
+	mainCasts := []string{}
 	director := ""
 	if cM, ok := jsData["credits"].(map[string]interface{}); ok {
 
@@ -89,7 +68,7 @@ func (api *TmdbApi) GetMovie(tmdbId string) *models.Film {
 				if i == 4 {
 					break
 				}
-				casts = append(casts, v.(map[string]interface{})["name"].(string))
+				mainCasts = append(mainCasts, v.(map[string]interface{})["name"].(string))
 			}
 		}
 		if crews, crOk := cM["crew"].([]interface{}); crOk {
@@ -119,11 +98,11 @@ func (api *TmdbApi) GetMovie(tmdbId string) *models.Film {
 
 	releaseDate, _ := time.Parse(time.DateOnly, jsData["release_date"].(string))
 
-	return &models.Film{
+	return &models.Movie{
+		Id:          -1,
 		TmdbId:      int(jsData["id"].(float64)),
 		ImdbId:      imdbId,
 		Title:       jsData["title"].(string),
-		Type:        models.Movie,
 		Genres:      genres,
 		ReleaseDate: releaseDate,
 		Runtime:     int(jsData["runtime"].(float64)),
@@ -132,14 +111,14 @@ func (api *TmdbApi) GetMovie(tmdbId string) *models.Film {
 		Overview:  jsData["overview"].(string),
 		PosterUrl: jsData["poster_path"].(string),
 		Rating:    float32(jsData["vote_average"].(float64)),
-		Keywords:  keywords,
+		Tags:      keywords,
 
 		Director:  director,
-		MainCasts: casts,
+		MainCasts: mainCasts,
 	}
 }
 
-func (api *TmdbApi) GetSeries(tmdbId string) *models.FilmSeries {
+func (api *TmdbApi) GetSeries(tmdbId string) *models.Show {
 	res, err := http.Get(TmdbBaseUrl + "tv/" + tmdbId + "?api_key=" + api.apiKey + "&append_to_response=external_ids,keywords,credits,content_ratings")
 	if err != nil {
 		return nil
@@ -151,6 +130,7 @@ func (api *TmdbApi) GetSeries(tmdbId string) *models.FilmSeries {
 	json.Unmarshal(data, &jsData)
 
 	if sB, ok := jsData["success"].(bool); ok && !sB {
+		fmt.Println(jsData)
 		return nil
 	}
 
@@ -175,13 +155,13 @@ func (api *TmdbApi) GetSeries(tmdbId string) *models.FilmSeries {
 		}
 	}
 
-	casts := []string{}
+	mainCasts := []string{}
 	director := ""
 	if cM, ok := jsData["credits"].(map[string]interface{}); ok {
 
 		if casts, cOk := cM["cast"].([]interface{}); cOk {
 			for i, v := range casts {
-				casts = append(casts, v.(map[string]interface{})["name"].(string))
+				mainCasts = append(mainCasts, v.(map[string]interface{})["name"].(string))
 				if i == 3 {
 					break
 				}
@@ -206,29 +186,29 @@ func (api *TmdbApi) GetSeries(tmdbId string) *models.FilmSeries {
 		}
 	}
 
-	releaseDate, _ := time.Parse(time.DateOnly, jsData["first_air_date"].(string))
+	firstDate, _ := time.Parse(time.DateOnly, jsData["first_air_date"].(string))
+	lastDate, _ := time.Parse(time.DateOnly, jsData["last_air_date"].(string))
 
-	return &models.FilmSeries{
-		Film: models.Film{
-			TmdbId:      int(jsData["id"].(float64)),
-			ImdbId:      imdbId,
-			Title:       jsData["name"].(string),
-			Type:        models.Series,
-			Genres:      genres,
-			ReleaseDate: releaseDate,
-			Runtime:     0,
-			AgeRating:   ageRating,
+	_ = director
+	return &models.Show{
+		Id:        -1,
+		TmdbId:    int(jsData["id"].(float64)),
+		ImdbId:    imdbId,
+		Title:     jsData["name"].(string),
+		Genres:    genres,
+		AgeRating: ageRating,
+		Status:    models.SeriesStatus(jsData["status"].(string)),
 
-			Overview:  jsData["overview"].(string),
-			PosterUrl: jsData["poster_path"].(string),
-			Rating:    float32(jsData["vote_average"].(float64)),
-			Keywords:  keywords,
+		FirstAirDate: firstDate,
+		LastAirDate:  lastDate,
+		NoSeasons:    int(jsData["number_of_seasons"].(float64)),
+		NoEpisodes:   int(jsData["number_of_episodes"].(float64)),
 
-			Director:  director,
-			MainCasts: casts},
+		Overview:  jsData["overview"].(string),
+		PosterUrl: jsData["poster_path"].(string),
+		Rating:    float32(jsData["vote_average"].(float64)),
+		Keywords:  keywords,
 
-		Status:        models.SeriesStatus(jsData["status"].(string)),
-		TotalSeasons:  int(jsData["number_of_seasons"].(float64)),
-		TotalEpisodes: int(jsData["number_of_episodes"].(float64)),
+		MainCasts: mainCasts,
 	}
 }

@@ -25,7 +25,6 @@ const (
 type FilmWatchlistItem struct {
 	WatchlistItemId int      `json:"watchlist_item_id"`
 	FilmId          int      `json:"film_id"`
-	UserId          int      `json:"user_id"`
 	Type            FilmType `json:"type"`
 
 	MyRating    float32     `json:"my_rating"` // 0 means not rated
