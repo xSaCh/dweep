@@ -22,7 +22,7 @@ const (
 	OnHold      WatchStatus = "on_hold"  // Generally for series
 )
 
-type FilmWatchlistItem struct {
+type WatchlistItem struct {
 	WatchlistItemId int      `json:"watchlist_item_id"`
 	FilmId          int      `json:"film_id"`
 	Type            FilmType `json:"type"`
@@ -36,19 +36,22 @@ type FilmWatchlistItem struct {
 
 	AddedOn   time.Time `json:"added_on"`
 	UpdatedOn time.Time `json:"updated_on"`
-	// WhenToWatch   WhenToWatch `json:"when_to_watch"`
 }
-type FilmWatchlistItemMovie struct {
-	FilmWatchlistItem
+type WatchlistItemMovie struct {
+	WatchlistItem
 	WatchedDates []time.Time `json:"watched_dates"`
 	// TimedWatched
 }
-type FilmWatchlistItemSeries struct {
-	FilmWatchlistItem
-	FullyWatchedSeasons []int            `json:"fully_watched_seasons"` // Season_IDs
+type WatchlistItemShow struct {
+	WatchlistItem
+	FullyWatchedSeasons []WatchedSeason  `json:"fully_watched_seasons"` // Season_IDs
 	WatchedEpisodes     []WatchedEpisode `json:"watched_episodes"`
 }
 
+type WatchedSeason struct {
+	SeasonId    int64     `json:"season_id"`
+	WatchedDate time.Time `json:"watched_date"`
+}
 type WatchedEpisode struct {
 	EpisodeId   int64     `json:"episode_id"`
 	WatchedDate time.Time `json:"watched_date"`

@@ -24,15 +24,15 @@ func main() {
 	// // m := *ta.GetMovie("534780")
 	// memStore := storage.NewMemoryStore()
 
-	// f1 := models.DBFilmWatchlistItem{
-	// 	FilmId:        mocks.MovieFilms[0].FilmId,
-	// 	Type:          mocks.MovieFilms[0].Type,
-	// 	MyRating:      4,
-	// 	MyTags:        []string{},
-	// 	WatchStatus:   models.Watched,
-	// 	Note:          "",
-	// 	RecommendedBy: []int64{},
-	// 	WatchedDate:   time.Now(),
+	// f1 := models.ReqWatchlistItemMovie{
+	// 	ReqWatchlistItem: models.ReqWatchlistItem{
+	// 		Id:            mocks.MovieFilms[0].FilmId,
+	// 		MyRating:      4,
+	// 		MyTags:        []string{},
+	// 		WatchStatus:   models.Watched,
+	// 		Note:          "",
+	// 		RecommendedBy: []int64{}},
+	// 	WatchedDate: time.Now(),
 	// }
 	// f2 := models.DBFilmWatchlistItem{
 	// 	FilmId:        mocks.MovieFilms[2].FilmId,

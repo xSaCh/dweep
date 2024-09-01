@@ -15,9 +15,11 @@ type Storage interface {
 }
 
 type WatchlistStorage interface {
-	AddFilm(item models.DBFilmWatchlistItem, userId int) error
-	UpdateFilm(item models.DBFilmWatchlistItem, userId int) error
-	RemoveFilm(filmId int, userId int) (bool, error)
-	GetAllFilms(userId int) ([]models.FilmWatchlistItem, error)
-	GetAllMovies(userId int) ([]models.FilmWatchlistItemMovie, error)
+	AddMovie(item models.ReqWatchlistItemMovie, userId int) error
+
+	// Replace all fields of the movie with the new values which are not nil/empty
+	UpdateMovie(item models.ReqWatchlistItemMovie, userId int) error
+	RemoveMovie(filmId int, userId int) (bool, error)
+	GetAllMovies(userId int) ([]models.WatchlistItemMovie, error)
+	GetMovie(filmId int, userId int) (models.WatchlistItemMovie, error)
 }
