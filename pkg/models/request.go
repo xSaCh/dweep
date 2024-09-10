@@ -3,19 +3,17 @@ package models
 import "time"
 
 type ReqWatchlistItem struct {
-	Id int
+	MyRating    float32     `json:"myRating"`
+	MyTags      []string    `json:"myTags"`
+	WatchStatus WatchStatus `json:"watchStatus"`
 
-	MyRating    float32
-	MyTags      []string
-	WatchStatus WatchStatus
-
-	Note          string
-	RecommendedBy []int64
+	Note          string  `json:"note"`
+	RecommendedBy []int64 `json:"recommendedBy"`
 }
 
 type ReqWatchlistItemMovie struct {
 	ReqWatchlistItem
-	WatchedDates []time.Time
+	WatchedDates []time.Time `json:"watchDates"`
 }
 
 // type ReqWatchlistItemShow struct {

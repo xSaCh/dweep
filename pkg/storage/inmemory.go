@@ -107,16 +107,16 @@ func NewMemoryStore() *MemoryStore {
 // 	return films, nil
 // }
 
-func (m *MemoryStore) AddMovie(item models.ReqWatchlistItemMovie, userId int) error {
+func (m *MemoryStore) AddMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error {
 	// Check if filmID is valid or not
 	// item.Id is tmdbId/ImdbId
 
-	if item.Id == 0 {
+	if filmId == 0 {
 		return errors.New(util.ErrorInvalidId)
 	}
 
 	fi := models.WatchlistItem{
-		FilmId:        item.Id,
+		FilmId:        filmId,
 		Type:          models.TypeMovie,
 		MyRating:      item.MyRating,
 		MyTags:        item.MyTags,
@@ -142,9 +142,9 @@ func (m *MemoryStore) AddMovie(item models.ReqWatchlistItemMovie, userId int) er
 	return nil
 }
 
-func (m *MemoryStore) UpdateMovie(item models.ReqWatchlistItemMovie, userId int) error {
+func (m *MemoryStore) UpdateMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error {
 	for i, it := range m.mW {
-		if it.FilmId == item.Id {
+		if it.FilmId == filmId {
 			if item.MyRating != 0 {
 				m.mW[i].MyRating = item.MyRating
 			}
