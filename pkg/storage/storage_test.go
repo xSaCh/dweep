@@ -139,12 +139,26 @@ func testStore_RemoveMovie(t *testing.T, ms storage.Storage) {
 
 func TestMemoryStore(t *testing.T) {
 	ms := storage.NewMemoryStore()
+
 	t.Run("MemoryStore", func(t *testing.T) {
 		testStore_AddMovie(t, ms)
 		ms = storage.NewMemoryStore()
 		testStore_UpdateMovie(t, ms)
 		ms = storage.NewMemoryStore()
 		testStore_RemoveMovie(t, ms)
+	})
+
+	ss, err := storage.NewSqlliteStore("test.db")
+	assert.NoError(t, err)
+
+	assert.NoError(t, ss.Create())
+
+	t.Run("SqliteStore", func(t *testing.T) {
+		testStore_AddMovie(t, ss)
+		// ms = storage.NewMemoryStore()
+		// testStore_UpdateMovie(t, ms)
+		// ms = storage.NewMemoryStore()
+		// testStore_RemoveMovie(t, ms)
 	})
 	// testStore_AddMovie(t, ms)
 	// ms = storage.NewMemoryStore()
