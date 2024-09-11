@@ -19,6 +19,7 @@ func NewHandler(storage storage.Storage) *Handler { return &Handler{storage: sto
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/movies/", util.MakeHTTPHandleFunc(h.getMovies)).Methods(http.MethodGet)
+	router.HandleFunc("/movie/{id}", util.MakeHTTPHandleFunc(h.getMovie)).Methods(http.MethodGet)
 	router.HandleFunc("/movie/{id}", util.MakeHTTPHandleFunc(h.addMovie)).Methods(http.MethodPost)
 	router.HandleFunc("/movie/{id}", util.MakeHTTPHandleFunc(h.updateMovie)).Methods(http.MethodPut)
 	router.HandleFunc("/movie/{id}", util.MakeHTTPHandleFunc(h.deleteMovie)).Methods(http.MethodDelete)
@@ -35,6 +36,28 @@ func (h *Handler) getMovies(w http.ResponseWriter, r *http.Request) error {
 	return util.WriteJSON(w, http.StatusOK, ms)
 
 }
+
+func (h *Handler) getMovie(w http.ResponseWriter, r *http.Request) error {
+	// Get userid from jwt token
+	vars := mux.Vars(r)
+	str, ok := vars["id"]
+	if !ok {
+		return util.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "missing movie ID"})
+	}
+
+	id, err := strconv.Atoi(str)
+	if err != nil {
+		return util.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid movie ID"})
+	}
+
+	m, err := h.storage.GetMovie(id, 1)
+	if err != nil {
+		return err
+	}
+
+	return util.WriteJSON(w, http.StatusOK, m)
+}
+
 func (h *Handler) addMovie(w http.ResponseWriter, r *http.Request) error {
 	// Get userid from jwt token
 
