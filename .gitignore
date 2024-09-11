@@ -1,0 +1,5 @@
+ApiTestLocal
+bin
+tmp
+
+*.db
