@@ -86,14 +86,14 @@ func (m *MemoryStore) UpdateMovie(item models.ReqWatchlistItemMovie, filmId int,
 	return errors.New(util.ErrorFilmNotFound)
 }
 
-func (m *MemoryStore) RemoveMovie(filmId int, userId int) (bool, error) {
+func (m *MemoryStore) RemoveMovie(filmId int, userId int) error {
 	for i, item := range m.mW {
 		if item.FilmId == filmId {
 			m.mW = append(m.mW[:i], m.mW[i+1:]...)
-			return true, nil
+			return nil
 		}
 	}
-	return false, errors.New(util.ErrorFilmNotFound)
+	return errors.New(util.ErrorFilmNotFound)
 }
 
 func (m *MemoryStore) GetAllMovies(userId int) ([]models.WatchlistItemMovie, error) {

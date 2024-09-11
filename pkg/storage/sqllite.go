@@ -118,8 +118,31 @@ func (s *SqlliteStore) UpdateMovie(item models.ReqWatchlistItemMovie, filmId int
 	}
 	return nil
 }
-func (s *SqlliteStore) RemoveMovie(filmId int, userId int) (bool, error) {
-	return false, fmt.Errorf("not implemented")
+func (s *SqlliteStore) RemoveMovie(filmId int, userId int) error {
+	queryDW := `DELETE FROM WatchlistItem WHERE WatchlistItemId = ? AND userId = ?;`
+	queryDM := `DELETE FROM WatchlistItem_Movie WHERE WatchlistItemId = ? AND userId = ?;`
+	queryDT := `DELETE FROM WatchlistItem_Tag WHERE WatchlistItemId = ? AND userId = ?;`
+	queryDR := `DELETE FROM WatchlistItem_Recommended WHERE WatchlistItemId = ? AND userId = ?;`
+
+	watchlistId := s.getWatchlistId(filmId, userId)
+	if watchlistId == -1 {
+		return fmt.Errorf("filmId not exists")
+	}
+	// Remove all tags, recommendedUserId and watchedDates befre reinserting
+	if _, err := s.db.Exec(queryDM, watchlistId, userId); err != nil {
+		return fmt.Errorf("error deleting movie watched dates: %v", err)
+	}
+	if _, err := s.db.Exec(queryDT, watchlistId, userId); err != nil {
+		return fmt.Errorf("error deleting movie tags: %v", err)
+	}
+	if _, err := s.db.Exec(queryDR, watchlistId, userId); err != nil {
+		return fmt.Errorf("error deleting movie Recommended by: %v", err)
+	}
+	if _, err := s.db.Exec(queryDW, watchlistId, userId); err != nil {
+		return fmt.Errorf("error deleting movie: %v", err)
+	}
+
+	return nil
 }
 func (s *SqlliteStore) GetAllMovies(userId int) ([]models.WatchlistItemMovie, error) {
 	query := `SELECT WatchlistItemId, FilmId, Type, MyRating, WatchStatus, Note, AddedOn, UpdatedOn FROM WatchlistItem WHERE UserID = ?;`
@@ -149,7 +172,22 @@ func (s *SqlliteStore) GetAllMovies(userId int) ([]models.WatchlistItemMovie, er
 	return movies, nil
 }
 func (s *SqlliteStore) GetMovie(filmId int, userId int) (models.WatchlistItemMovie, error) {
-	return models.WatchlistItemMovie{}, fmt.Errorf("not implemented")
+	wid := s.getWatchlistId(filmId, userId)
+	if wid == -1 {
+		return models.WatchlistItemMovie{}, fmt.Errorf("movie not found")
+	}
+
+	query := `SELECT WatchlistItemId, FilmId, Type, MyRating, WatchStatus, Note, AddedOn, UpdatedOn FROM WatchlistItem WHERE WatchlistItemId = ? AND UserID = ?;`
+	row := s.db.QueryRow(query, wid, userId)
+
+	var movie models.WatchlistItemMovie
+	err := row.Scan(&movie.WatchlistItemId, &movie.FilmId, &movie.Type, &movie.MyRating, &movie.WatchStatus, &movie.Note, &movie.AddedOn, &movie.UpdatedOn)
+	if err != nil {
+		return models.WatchlistItemMovie{}, fmt.Errorf("error scanning movie: %v", err)
+	}
+
+	s.getWatchlistMovieOtherData(&movie, userId)
+	return movie, nil
 }
 
 func (s *SqlliteStore) getWatchlistMovieOtherData(w *models.WatchlistItemMovie, userId int) {

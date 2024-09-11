@@ -19,7 +19,7 @@ type WatchlistStorage interface {
 
 	// Replace all fields of the movie with the new values which are not nil/empty
 	UpdateMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error
-	RemoveMovie(filmId int, userId int) (bool, error)
+	RemoveMovie(filmId int, userId int) error
 	GetAllMovies(userId int) ([]models.WatchlistItemMovie, error)
 	GetMovie(filmId int, userId int) (models.WatchlistItemMovie, error)
 }
