@@ -114,3 +114,14 @@ func (m *MemoryStore) GetMovie(filmId int, userId int) (models.WatchlistItemMovi
 	}
 	return models.WatchlistItemMovie{}, errors.New(util.ErrorFilmNotFound)
 }
+
+func (m *MemoryStore) WatchedMovie(filmId int, userId int, watchedDate time.Time) error {
+	for i, item := range m.mW {
+		if item.FilmId == filmId {
+			m.mW[i].WatchStatus = models.Watched
+			m.mW[i].WatchedDates = append(m.mW[i].WatchedDates, watchedDate)
+			return nil
+		}
+	}
+	return errors.New(util.ErrorFilmNotFound)
+}

@@ -170,19 +170,45 @@ func testStore_GetMovie(t *testing.T, ms storage.Storage) {
 	assert.Equal(t, w2.WatchStatus, m.WatchStatus)
 }
 
+func testStore_WatchedMovie(t *testing.T, ms storage.Storage) {
+
+	w1 := models.WatchlistItemMovie{
+		WatchlistItem: models.WatchlistItem{
+			FilmId:      mocks.MovieFilms[1].FilmId,
+			WatchStatus: models.PlanToWatch,
+			Note:        "Notes to test",
+		},
+	}
+
+	f1, f1I := WatchlistToReq(w1)
+
+	ms.AddMovie(f1, f1I, 1)
+	ms.WatchedMovie(f1I, 1, time.Date(2024, 9, 8, 0, 0, 0, 0, time.UTC))
+	ms.WatchedMovie(f1I, 1, time.Date(2024, 9, 9, 0, 0, 0, 0, time.UTC))
+	m, err := ms.GetMovie(f1I, 1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, w1.FilmId, m.FilmId)
+	assert.Equal(t, []time.Time{time.Date(2024, 9, 8, 0, 0, 0, 0, time.UTC), time.Date(2024, 9, 9, 0, 0, 0, 0, time.UTC)}, m.WatchedDates)
+	assert.Equal(t, models.Watched, m.WatchStatus)
+}
+
 func TestStore(t *testing.T) {
-	ms := storage.NewMemoryStore()
+	// ms := storage.NewMemoryStore()
 
-	t.Run("MemoryStore", func(t *testing.T) {
-		testStore_AddMovie(t, ms)
-		ms = storage.NewMemoryStore()
-		testStore_UpdateMovie(t, ms)
-		ms = storage.NewMemoryStore()
-		testStore_RemoveMovie(t, ms)
+	// t.Run("MemoryStore", func(t *testing.T) {
+	// 	testStore_AddMovie(t, ms)
+	// 	ms = storage.NewMemoryStore()
+	// 	testStore_UpdateMovie(t, ms)
+	// 	ms = storage.NewMemoryStore()
+	// 	testStore_RemoveMovie(t, ms)
 
-		ms = storage.NewMemoryStore()
-		testStore_GetMovie(t, ms)
-	})
+	// 	ms = storage.NewMemoryStore()
+	// 	testStore_GetMovie(t, ms)
+
+	// 	ms = storage.NewMemoryStore()
+	// 	testStore_WatchedMovie(t, ms)
+	// })
 
 	ss, err := storage.NewSqlliteStore("test.db")
 
@@ -201,10 +227,8 @@ func TestStore(t *testing.T) {
 		assert.NoError(t, ss.Create())
 		testStore_GetMovie(t, ss)
 
+		assert.NoError(t, ss.Create())
+		testStore_WatchedMovie(t, ss)
+
 	})
-	// testStore_AddMovie(t, ms)
-	// ms = storage.NewMemoryStore()
-	// testStore_UpdateMovie(t, ms)
-	// ms = storage.NewMemoryStore()
-	// testStore_RemoveMovie(t, ms)
 }

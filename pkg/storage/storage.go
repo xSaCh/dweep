@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"time"
+
 	"github.com/xSaCh/dweep/pkg/models"
 )
 
@@ -22,4 +24,6 @@ type WatchlistStorage interface {
 	RemoveMovie(filmId int, userId int) error
 	GetAllMovies(userId int) ([]models.WatchlistItemMovie, error)
 	GetMovie(filmId int, userId int) (models.WatchlistItemMovie, error)
+
+	WatchedMovie(filmId int, userId int, watchedDate time.Time) error
 }

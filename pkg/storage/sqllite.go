@@ -190,6 +190,26 @@ func (s *SqlliteStore) GetMovie(filmId int, userId int) (models.WatchlistItemMov
 	return movie, nil
 }
 
+func (s *SqlliteStore) WatchedMovie(filmId int, userId int, watchedDate time.Time) error {
+	query := `UPDATE WatchlistItem SET WatchStatus = ?, UpdatedOn = ? WHERE FilmId = ? AND UserID = ?;`
+	queryM := `INSERT INTO WatchlistItem_Movie (WatchlistItemId, userId, watchedDate) VALUES (?, ?, ?);`
+
+	wid := s.getWatchlistId(filmId, userId)
+	if wid == -1 {
+		return fmt.Errorf("movie not found")
+	}
+
+	if _, err := s.db.Exec(query, "watched", time.Now(), filmId, userId); err != nil {
+		return fmt.Errorf("error updating movie to watched: %v", err)
+	}
+
+	if _, err := s.db.Exec(queryM, wid, userId, watchedDate); err != nil {
+		return fmt.Errorf("error inserting movie watched dates: %v", err)
+	}
+
+	return nil
+}
+
 func (s *SqlliteStore) getWatchlistMovieOtherData(w *models.WatchlistItemMovie, userId int) {
 	queryM := `SELECT watchedDate FROM WatchlistItem_Movie WHERE WatchlistItemId = ? AND userId = ?;`
 	queryT := `SELECT Tag FROM WatchlistItem_Tag WHERE WatchlistItemId = ? AND userId = ?;`
