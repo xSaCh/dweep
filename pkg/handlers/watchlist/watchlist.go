@@ -3,6 +3,7 @@ package watchlist
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/xSaCh/dweep/pkg/models"
@@ -18,7 +19,9 @@ func NewHandler(storage storage.Storage) *Handler { return &Handler{storage: sto
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/movies/", util.MakeHTTPHandleFunc(h.getMovies)).Methods(http.MethodGet)
-	router.HandleFunc("/movie/", util.MakeHTTPHandleFunc(h.addMovie)).Methods(http.MethodPost)
+	router.HandleFunc("/movie/{id}", util.MakeHTTPHandleFunc(h.addMovie)).Methods(http.MethodPost)
+	router.HandleFunc("/movie/{id}", util.MakeHTTPHandleFunc(h.updateMovie)).Methods(http.MethodPut)
+	router.HandleFunc("/movie/{id}", util.MakeHTTPHandleFunc(h.deleteMovie)).Methods(http.MethodDelete)
 }
 
 func (h *Handler) getMovies(w http.ResponseWriter, r *http.Request) error {
@@ -34,20 +37,78 @@ func (h *Handler) getMovies(w http.ResponseWriter, r *http.Request) error {
 }
 func (h *Handler) addMovie(w http.ResponseWriter, r *http.Request) error {
 	// Get userid from jwt token
+
+	vars := mux.Vars(r)
+	str, ok := vars["id"]
+	if !ok {
+		return util.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "missing movie ID"})
+	}
+
+	id, err := strconv.Atoi(str)
+	if err != nil {
+		return util.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid movie ID"})
+	}
+
 	var mov models.ReqWatchlistItemMovie
-	err := util.ParseJSON(r, &mov)
+	err = util.ParseJSON(r, &mov)
 	if err != nil {
 		return err
 	}
 	fmt.Printf("[Debug] Adding movie %#v", mov)
 
-	ms, err := h.storage.GetAllMovies(1)
-	if err != nil {
+	if err := h.storage.AddMovie(mov, id, 1); err != nil {
 		return err
 	}
 
-	return util.WriteJSON(w, http.StatusOK, ms)
+	return util.WriteJSON(w, http.StatusOK, map[string]string{"msg": "movie added"})
 
+}
+
+func (h *Handler) updateMovie(w http.ResponseWriter, r *http.Request) error {
+	// Get userid from jwt token
+	vars := mux.Vars(r)
+	str, ok := vars["id"]
+	if !ok {
+		return util.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "missing movie ID"})
+	}
+
+	id, err := strconv.Atoi(str)
+	if err != nil {
+		return util.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid movie ID"})
+	}
+
+	var mov models.ReqWatchlistItemMovie
+	err = util.ParseJSON(r, &mov)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("[Debug] Updating movie %#v", mov)
+
+	if err := h.storage.UpdateMovie(mov, id, 1); err != nil {
+		return err
+	}
+
+	return util.WriteJSON(w, http.StatusOK, map[string]string{"msg": "movie updated"})
+}
+
+func (h *Handler) deleteMovie(w http.ResponseWriter, r *http.Request) error {
+	// Get userid from jwt token
+	vars := mux.Vars(r)
+	str, ok := vars["id"]
+	if !ok {
+		return util.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "missing movie ID"})
+	}
+
+	id, err := strconv.Atoi(str)
+	if err != nil {
+		return util.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid movie ID"})
+	}
+
+	if err := h.storage.RemoveMovie(id, 1); err != nil {
+		return err
+	}
+
+	return util.WriteJSON(w, http.StatusOK, map[string]string{"msg": "movie removed"})
 }
 
 // func (h *Handler) handleCheckout(w http.ResponseWriter, r *http.Request) {

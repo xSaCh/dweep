@@ -3,12 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	ext "github.com/xSaCh/dweep/external_apis"
 	"github.com/xSaCh/dweep/pkg"
-	"github.com/xSaCh/dweep/pkg/mocks"
-	"github.com/xSaCh/dweep/pkg/models"
 	"github.com/xSaCh/dweep/pkg/storage"
 	"github.com/xSaCh/dweep/util"
 )
@@ -19,24 +16,26 @@ const (
 )
 
 func main() {
-	ms := storage.NewMemoryStore()
+	// ms := storage.NewMemoryStore()
+	ss, _ := storage.NewSqlliteStore("dweep.db")
+	ss.Create()
 
-	f1 := models.ReqWatchlistItemMovie{
-		ReqWatchlistItem: models.ReqWatchlistItem{
-			MyRating:      4,
-			MyTags:        []string{},
-			WatchStatus:   models.Watched,
-			Note:          "",
-			RecommendedBy: []int64{},
-		},
-		WatchedDates: []time.Time{time.Now()},
-	}
+	// f1 := models.ReqWatchlistItemMovie{
+	// 	ReqWatchlistItem: models.ReqWatchlistItem{
+	// 		MyRating:      4,
+	// 		MyTags:        []string{},
+	// 		WatchStatus:   models.Watched,
+	// 		Note:          "",
+	// 		RecommendedBy: []int64{},
+	// 	},
+	// 	WatchedDates: []time.Time{time.Now()},
+	// }
 
-	b, _ := json.MarshalIndent(f1, "", "  ")
-	fmt.Println(string(b))
+	// b, _ := json.MarshalIndent(f1, "", "  ")
+	// fmt.Println(string(b))
 
-	ms.AddMovie(f1, mocks.MovieFilms[0].FilmId, 1)
-	ser := pkg.NewAPIServer("localhost:8080", ms)
+	// ms.AddMovie(f1, mocks.MovieFilms[0].FilmId, 1)
+	ser := pkg.NewAPIServer("localhost:8080", ss)
 	ser.Run()
 }
 
