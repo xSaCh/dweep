@@ -136,6 +136,40 @@ func testStore_RemoveMovie(t *testing.T, ms storage.Storage) {
 	assert.Equal(t, w2.FilmId, m[0].FilmId)
 }
 
+func testStore_GetMovie(t *testing.T, ms storage.Storage) {
+
+	w1 := models.WatchlistItemMovie{
+		WatchlistItem: models.WatchlistItem{
+			FilmId:        mocks.MovieFilms[0].FilmId,
+			MyRating:      4,
+			MyTags:        []string{"t1", "t2"},
+			WatchStatus:   models.Watched,
+			Note:          "Notes to test",
+			RecommendedBy: []int64{69, 420},
+		},
+		WatchedDates: []time.Time{time.Date(2024, 9, 8, 0, 0, 0, 0, time.UTC)},
+	}
+	w2 := models.WatchlistItemMovie{
+		WatchlistItem: models.WatchlistItem{
+			FilmId:      mocks.MovieFilms[1].FilmId,
+			WatchStatus: models.PlanToWatch,
+			Note:        "Notes to test",
+		},
+	}
+
+	f1, f1I := WatchlistToReq(w1)
+	f2, f2I := WatchlistToReq(w2)
+
+	ms.AddMovie(f1, f1I, 1)
+	ms.AddMovie(f2, f2I, 1)
+	m, err := ms.GetMovie(f2I, 1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, w2.FilmId, m.FilmId)
+	assert.Equal(t, w2.WatchedDates, m.WatchedDates)
+	assert.Equal(t, w2.WatchStatus, m.WatchStatus)
+}
+
 func TestStore(t *testing.T) {
 	ms := storage.NewMemoryStore()
 
@@ -145,6 +179,9 @@ func TestStore(t *testing.T) {
 		testStore_UpdateMovie(t, ms)
 		ms = storage.NewMemoryStore()
 		testStore_RemoveMovie(t, ms)
+
+		ms = storage.NewMemoryStore()
+		testStore_GetMovie(t, ms)
 	})
 
 	ss, err := storage.NewSqlliteStore("test.db")
@@ -160,6 +197,9 @@ func TestStore(t *testing.T) {
 
 		assert.NoError(t, ss.Create())
 		testStore_RemoveMovie(t, ss)
+
+		assert.NoError(t, ss.Create())
+		testStore_GetMovie(t, ss)
 
 	})
 	// testStore_AddMovie(t, ms)
