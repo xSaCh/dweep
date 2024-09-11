@@ -78,22 +78,21 @@ func testStore_UpdateMovie(t *testing.T, ms storage.Storage) {
 	}
 
 	f1, f1I := WatchlistToReq(w1)
-
 	f2, f2I := WatchlistToReq(w2)
 
-	ms.AddMovie(f1, f1I, 1)
-	ms.AddMovie(f2, f2I, 1)
+	assert.NoError(t, ms.AddMovie(f1, f1I, 1))
+	assert.NoError(t, ms.AddMovie(f2, f2I, 1))
 
 	w1.WatchedDates = append(w1.WatchedDates, time.Date(2024, 9, 9, 0, 0, 0, 0, time.UTC))
 	f1.WatchedDates = append(f1.WatchedDates, time.Date(2024, 9, 9, 0, 0, 0, 0, time.UTC))
 
 	w2.WatchStatus = models.Dropped
-
 	ms.UpdateMovie(f1, f1I, 1)
 	ms.UpdateMovie(f2, f2I, 1)
 
 	m, err := ms.GetAllMovies(1)
-
+	_ = m
+	_ = err
 	assert.Len(t, m, 2)
 	assert.NoError(t, err)
 	assert.Equal(t, w1.WatchedDates, m[0].WatchedDates)
@@ -137,7 +136,7 @@ func testStore_RemoveMovie(t *testing.T, ms storage.Storage) {
 	assert.Equal(t, w2.FilmId, m[0].FilmId)
 }
 
-func TestMemoryStore(t *testing.T) {
+func TestStore(t *testing.T) {
 	ms := storage.NewMemoryStore()
 
 	t.Run("MemoryStore", func(t *testing.T) {
@@ -149,16 +148,19 @@ func TestMemoryStore(t *testing.T) {
 	})
 
 	ss, err := storage.NewSqlliteStore("test.db")
-	assert.NoError(t, err)
 
+	assert.NoError(t, err)
 	assert.NoError(t, ss.Create())
 
 	t.Run("SqliteStore", func(t *testing.T) {
 		testStore_AddMovie(t, ss)
-		// ms = storage.NewMemoryStore()
-		// testStore_UpdateMovie(t, ms)
-		// ms = storage.NewMemoryStore()
-		// testStore_RemoveMovie(t, ms)
+
+		assert.NoError(t, ss.Create())
+		testStore_UpdateMovie(t, ss)
+
+		assert.NoError(t, ss.Create())
+		testStore_RemoveMovie(t, ss)
+
 	})
 	// testStore_AddMovie(t, ms)
 	// ms = storage.NewMemoryStore()

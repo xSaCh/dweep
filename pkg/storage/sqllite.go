@@ -27,15 +27,17 @@ func NewSqlliteStore(file string) (*SqlliteStore, error) {
 func (s *SqlliteStore) Create() error {
 
 	queryW := `CREATE TABLE WatchlistItem (
-		WatchlistItemId INTEGER PRIMARY KEY AUTOINCREMENT,
-		UserID INTEGER,
-		FilmId INTEGER,
-		Type TEXT,
+		WatchlistItemId INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		UserID INTEGER NOT NULL,
+		FilmId INTEGER NOT NULL,
+		Type char(20),
 		MyRating REAL,
-		WatchStatus TEXT,
+		WatchStatus char(20) NOT NULL,
 		Note TEXT,
 		AddedOn DATE,
-		UpdatedOn DATE);`
+		UpdatedOn DATE
+		);`
+	// PRIMARY KEY (WatchlistItemId, UserID),
 
 	queryR := `CREATE TABLE WatchlistItem_Recommended ( WatchlistItemId INTEGER, userId INTEGER, RecommendedBy INTEGER,
 		FOREIGN KEY (WatchlistItemId) REFERENCES WatchlistItem(WatchlistItemId));`
@@ -46,10 +48,10 @@ func (s *SqlliteStore) Create() error {
 		FOREIGN KEY (WatchlistItemId) REFERENCES WatchlistItem(WatchlistItemId));`
 
 	s.db.Exec("PRAGMA foreign_keys = ON;")
-	s.db.Exec("DROP TABLE IF EXISTS WatchlistItem;")
 	s.db.Exec("DROP TABLE IF EXISTS WatchlistItem_Recommended;")
 	s.db.Exec("DROP TABLE IF EXISTS WatchlistItem_Tag;")
 	s.db.Exec("DROP TABLE IF EXISTS WatchlistItem_Movie;")
+	s.db.Exec("DROP TABLE IF EXISTS WatchlistItem;")
 
 	_, err := s.db.Exec(queryW)
 	if err != nil {
@@ -72,40 +74,49 @@ func (s *SqlliteStore) Create() error {
 
 func (s *SqlliteStore) AddMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error {
 	queryW := `INSERT INTO WatchlistItem (UserId, FilmId, Type, MyRating, WatchStatus, Note, AddedOn, UpdatedOn) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`
-	queryM := `INSERT INTO WatchlistItem_Movie (WatchlistItemId, userId, watchedDate) VALUES (?, ?, ?);`
-	queryT := `INSERT INTO WatchlistItem_Tag (WatchlistItemId, userId, Tag) VALUES (?, ?, ?);`
-	queryR := `INSERT INTO WatchlistItem_Recommended (WatchlistItemId, userId, RecommendedBy) VALUES (?, ?, ?);`
+
+	if s.getWatchlistId(filmId, userId) != -1 {
+		return fmt.Errorf("movie already exists in watchlist")
+	}
 
 	r, err := s.db.Exec(queryW, userId, filmId, "movie", item.MyRating, item.WatchStatus, item.Note, time.Now(), time.Now())
 	if err != nil {
 		return fmt.Errorf("error inserting movie: %v", err)
 	}
 	wid, _ := r.LastInsertId()
-	for i := range item.MyTags {
-		_, err := s.db.Exec(queryT, wid, userId, item.MyTags[i])
-		if err != nil {
-			return fmt.Errorf("error inserting movie tags: %v", err)
-		}
-	}
-	for i := range item.RecommendedBy {
-		_, err := s.db.Exec(queryR, wid, userId, item.RecommendedBy[i])
-		if err != nil {
-			return fmt.Errorf("error inserting movie recommended by: %v", err)
-		}
-	}
-	for i := range item.WatchedDates {
-		fmt.Printf("watched date: %v\n", item.WatchedDates[i])
-		_, err := s.db.Exec(queryM, wid, userId, item.WatchedDates[i])
-		if err != nil {
-			return fmt.Errorf("error inserting movie watched dates: %v", err)
-		}
+	if err := s.setWatchlistMovieOtherData(item, int(wid), userId); err != nil {
+		return err
 	}
 
 	return nil
 }
 
 func (s *SqlliteStore) UpdateMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error {
-	return fmt.Errorf("not implemented")
+	queryW := `UPDATE WatchlistItem SET MyRating = ?, WatchStatus = ?, Note = ?, UpdatedOn = ? WHERE FilmId = ? AND UserID = ?;`
+
+	queryDM := `DELETE FROM WatchlistItem_Movie WHERE WatchlistItemId = ? AND userId = ?;`
+	queryDT := `DELETE FROM WatchlistItem_Tag WHERE WatchlistItemId = ? AND userId = ?;`
+	queryDR := `DELETE FROM WatchlistItem_Recommended WHERE WatchlistItemId = ? AND userId = ?;`
+
+	watchlistId := s.getWatchlistId(filmId, userId)
+	if watchlistId == -1 {
+		return fmt.Errorf("filmId not exists")
+	}
+
+	r, err := s.db.Exec(queryW, item.MyRating, item.WatchStatus, item.Note, time.Now(), filmId, userId)
+	ra, _ := r.RowsAffected()
+	if err != nil && ra != 1 {
+		return err
+	}
+	// Remove all tags, recommendedUserId and watchedDates befre reinserting
+	s.db.Exec(queryDM, watchlistId, userId)
+	s.db.Exec(queryDT, watchlistId, userId)
+	s.db.Exec(queryDR, watchlistId, userId)
+
+	if err := s.setWatchlistMovieOtherData(item, watchlistId, userId); err != nil {
+		return err
+	}
+	return nil
 }
 func (s *SqlliteStore) RemoveMovie(filmId int, userId int) (bool, error) {
 	return false, fmt.Errorf("not implemented")
@@ -127,7 +138,7 @@ func (s *SqlliteStore) GetAllMovies(userId int) ([]models.WatchlistItemMovie, er
 			return nil, fmt.Errorf("error scanning movie: %v", err)
 		}
 
-		s.getWatchlistMovieOtherData(&movie, userId, s.db)
+		s.getWatchlistMovieOtherData(&movie, userId)
 		movies = append(movies, movie)
 	}
 
@@ -141,12 +152,12 @@ func (s *SqlliteStore) GetMovie(filmId int, userId int) (models.WatchlistItemMov
 	return models.WatchlistItemMovie{}, fmt.Errorf("not implemented")
 }
 
-func (s *SqlliteStore) getWatchlistMovieOtherData(w *models.WatchlistItemMovie, userId int, db *sql.DB) {
+func (s *SqlliteStore) getWatchlistMovieOtherData(w *models.WatchlistItemMovie, userId int) {
 	queryM := `SELECT watchedDate FROM WatchlistItem_Movie WHERE WatchlistItemId = ? AND userId = ?;`
 	queryT := `SELECT Tag FROM WatchlistItem_Tag WHERE WatchlistItemId = ? AND userId = ?;`
 	queryR := `SELECT RecommendedBy FROM WatchlistItem_Recommended WHERE WatchlistItemId = ? AND userId = ?;`
 
-	rows, err := db.Query(queryM, w.WatchlistItemId, userId)
+	rows, err := s.db.Query(queryM, w.WatchlistItemId, userId)
 	if err != nil {
 		return
 	}
@@ -161,7 +172,7 @@ func (s *SqlliteStore) getWatchlistMovieOtherData(w *models.WatchlistItemMovie, 
 		w.WatchedDates = append(w.WatchedDates, d)
 	}
 
-	rows, err = db.Query(queryT, w.WatchlistItemId, userId)
+	rows, err = s.db.Query(queryT, w.WatchlistItemId, userId)
 	if err != nil {
 		return
 	}
@@ -176,7 +187,7 @@ func (s *SqlliteStore) getWatchlistMovieOtherData(w *models.WatchlistItemMovie, 
 		w.MyTags = append(w.MyTags, t)
 	}
 
-	rows, err = db.Query(queryR, w.WatchlistItemId, userId)
+	rows, err = s.db.Query(queryR, w.WatchlistItemId, userId)
 	if err != nil {
 		return
 	}
@@ -190,4 +201,45 @@ func (s *SqlliteStore) getWatchlistMovieOtherData(w *models.WatchlistItemMovie, 
 		}
 		w.RecommendedBy = append(w.RecommendedBy, int64(r))
 	}
+}
+
+func (s *SqlliteStore) setWatchlistMovieOtherData(item models.ReqWatchlistItemMovie, watchlistId int, userId int) error {
+	queryM := `INSERT INTO WatchlistItem_Movie (WatchlistItemId, userId, watchedDate) VALUES (?, ?, ?);`
+	queryT := `INSERT INTO WatchlistItem_Tag (WatchlistItemId, userId, Tag) VALUES (?, ?, ?);`
+	queryR := `INSERT INTO WatchlistItem_Recommended (WatchlistItemId, userId, RecommendedBy) VALUES (?, ?, ?);`
+
+	for i := range item.MyTags {
+		_, err := s.db.Exec(queryT, watchlistId, userId, item.MyTags[i])
+		if err != nil {
+			return fmt.Errorf("error inserting movie tags: %v", err)
+		}
+	}
+	for i := range item.RecommendedBy {
+		_, err := s.db.Exec(queryR, watchlistId, userId, item.RecommendedBy[i])
+		if err != nil {
+			return fmt.Errorf("error inserting movie recommended by: %v", err)
+		}
+	}
+
+	for i := range item.WatchedDates {
+		fmt.Printf("[] watched date: %v\n", item.WatchedDates[i])
+		_, err := s.db.Exec(queryM, watchlistId, userId, item.WatchedDates[i])
+		if err != nil {
+			return fmt.Errorf("error inserting movie watched dates: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (s *SqlliteStore) getWatchlistId(filmid int, userid int) int {
+	query := `SELECT WatchlistItemId FROM WatchlistItem WHERE FilmId = ? AND UserID = ?;`
+	rows, err := s.db.Query(query, filmid, userid)
+	if err != nil || !rows.Next() {
+		return -1
+	}
+	defer rows.Close()
+	wid := -1
+	rows.Scan(&wid)
+	return wid
 }
