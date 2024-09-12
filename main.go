@@ -10,11 +10,6 @@ import (
 	"github.com/xSaCh/dweep/util"
 )
 
-const (
-	OMDB_API_KEY = "5d0b46f6"
-	TMDB_API_KEY = "a3ca43df787ec6b692b7e1e2d53a65ec"
-)
-
 func main() {
 	// ms := storage.NewMemoryStore()
 	ss, err := storage.NewSqliteStore("dweep.db")
@@ -43,8 +38,9 @@ func main() {
 }
 
 func amain() {
+	config := initConfig()
 
-	ta := ext.NewTmdbApi(TMDB_API_KEY)
+	ta := ext.NewTmdbApi(config.TmdbApiKey)
 	// m := *ta.GetMovie("550")
 	m := *ta.GetSeries("65784")
 	a, _ := json.Marshal(m)
