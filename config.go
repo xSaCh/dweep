@@ -12,6 +12,7 @@ type Config struct {
 	Port                   string
 	TmdbApiKey             string
 	OmdbApiKey             string
+	SqliteDBName           string
 	JWTSecret              string
 	JWTExpirationInSeconds int64
 }
@@ -22,10 +23,11 @@ func initConfig() Config {
 	godotenv.Load()
 
 	return Config{
-		PublicHost:             getEnv("PUBLIC_HOST", "http://localhost"),
+		PublicHost:             getEnv("PUBLIC_HOST", "localhost"),
 		Port:                   getEnv("PORT", "8080"),
 		TmdbApiKey:             getEnv("TMDB_API_KEY", ""),
 		OmdbApiKey:             getEnv("OMDB_API_KEY", ""),
+		SqliteDBName:           getEnv("SQLITE_DB_NAME", "dweep.db"),
 		JWTSecret:              getEnv("JWT_SECRET", "it-is-secret-fr"),
 		JWTExpirationInSeconds: getEnvAsInt("JWT_EXPIRATION_IN_SECONDS", 3600*24*7),
 	}

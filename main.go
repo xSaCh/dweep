@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	conf := initConfig()
 	// ms := storage.NewMemoryStore()
 	ss, err := storage.NewSqliteStore("dweep.db")
 	if err != nil {
@@ -33,8 +34,11 @@ func main() {
 	// fmt.Println(string(b))
 
 	// ms.AddMovie(f1, mocks.MovieFilms[0].FilmId, 1)
-	ser := pkg.NewAPIServer("localhost:8080", ss)
-	ser.Run()
+	ser := pkg.NewAPIServer(fmt.Sprintf("%s:%s", conf.PublicHost, conf.Port), ss)
+	err = ser.Run()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func amain() {
