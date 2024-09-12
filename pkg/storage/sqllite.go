@@ -9,11 +9,11 @@ import (
 	"github.com/xSaCh/dweep/pkg/models"
 )
 
-type SqlliteStore struct {
+type SqliteStore struct {
 	db *sql.DB
 }
 
-func NewSqlliteStore(file string) (*SqlliteStore, error) {
+func NewSqliteStore(file string) (*SqliteStore, error) {
 	db, err := sql.Open("sqlite3", file)
 	if err != nil {
 		return nil, fmt.Errorf("error opening db: %v", err)
@@ -21,10 +21,10 @@ func NewSqlliteStore(file string) (*SqlliteStore, error) {
 	if err = db.Ping(); err != nil {
 		return nil, fmt.Errorf("error pinging db: %v", err)
 	}
-	return &SqlliteStore{db: db}, nil
+	return &SqliteStore{db: db}, nil
 }
 
-func (s *SqlliteStore) Create() error {
+func (s *SqliteStore) Create() error {
 
 	queryW := `CREATE TABLE WatchlistItem (
 		WatchlistItemId INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -72,7 +72,7 @@ func (s *SqlliteStore) Create() error {
 	return nil
 }
 
-func (s *SqlliteStore) WLAddMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error {
+func (s *SqliteStore) WLAddMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error {
 	queryW := `INSERT INTO WatchlistItem (UserId, FilmId, Type, MyRating, WatchStatus, Note, AddedOn, UpdatedOn) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`
 
 	if s.getWatchlistId(filmId, userId) != -1 {
@@ -92,7 +92,7 @@ func (s *SqlliteStore) WLAddMovie(item models.ReqWatchlistItemMovie, filmId int,
 	return nil
 }
 
-func (s *SqlliteStore) WLUpdateMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error {
+func (s *SqliteStore) WLUpdateMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error {
 	queryW := `UPDATE WatchlistItem SET MyRating = ?, WatchStatus = ?, Note = ?, UpdatedOn = ? WHERE FilmId = ? AND UserID = ?;`
 
 	queryDM := `DELETE FROM WatchlistItem_Movie WHERE WatchlistItemId = ? AND userId = ?;`
@@ -119,7 +119,7 @@ func (s *SqlliteStore) WLUpdateMovie(item models.ReqWatchlistItemMovie, filmId i
 	}
 	return nil
 }
-func (s *SqlliteStore) WLRemoveMovie(filmId int, userId int) error {
+func (s *SqliteStore) WLRemoveMovie(filmId int, userId int) error {
 	queryDW := `DELETE FROM WatchlistItem WHERE WatchlistItemId = ? AND userId = ?;`
 	queryDM := `DELETE FROM WatchlistItem_Movie WHERE WatchlistItemId = ? AND userId = ?;`
 	queryDT := `DELETE FROM WatchlistItem_Tag WHERE WatchlistItemId = ? AND userId = ?;`
@@ -145,7 +145,7 @@ func (s *SqlliteStore) WLRemoveMovie(filmId int, userId int) error {
 
 	return nil
 }
-func (s *SqlliteStore) WLGetAllMovies(userId int) ([]models.WatchlistItemMovie, error) {
+func (s *SqliteStore) WLGetAllMovies(userId int) ([]models.WatchlistItemMovie, error) {
 	query := `SELECT WatchlistItemId, FilmId, Type, MyRating, WatchStatus, Note, AddedOn, UpdatedOn FROM WatchlistItem WHERE UserID = ?;`
 
 	rows, err := s.db.Query(query, userId)
@@ -172,7 +172,7 @@ func (s *SqlliteStore) WLGetAllMovies(userId int) ([]models.WatchlistItemMovie, 
 
 	return movies, nil
 }
-func (s *SqlliteStore) WLGetMovie(filmId int, userId int) (models.WatchlistItemMovie, error) {
+func (s *SqliteStore) WLGetMovie(filmId int, userId int) (models.WatchlistItemMovie, error) {
 	wid := s.getWatchlistId(filmId, userId)
 	if wid == -1 {
 		return models.WatchlistItemMovie{}, fmt.Errorf("movie not found")
@@ -191,7 +191,7 @@ func (s *SqlliteStore) WLGetMovie(filmId int, userId int) (models.WatchlistItemM
 	return movie, nil
 }
 
-func (s *SqlliteStore) WLWatchedMovie(filmId int, userId int, watchedDate time.Time) error {
+func (s *SqliteStore) WLWatchedMovie(filmId int, userId int, watchedDate time.Time) error {
 	query := `UPDATE WatchlistItem SET WatchStatus = ?, UpdatedOn = ? WHERE FilmId = ? AND UserID = ?;`
 	queryM := `INSERT INTO WatchlistItem_Movie (WatchlistItemId, userId, watchedDate) VALUES (?, ?, ?);`
 
@@ -211,7 +211,7 @@ func (s *SqlliteStore) WLWatchedMovie(filmId int, userId int, watchedDate time.T
 	return nil
 }
 
-func (s *SqlliteStore) getWatchlistMovieOtherData(w *models.WatchlistItemMovie, userId int) {
+func (s *SqliteStore) getWatchlistMovieOtherData(w *models.WatchlistItemMovie, userId int) {
 	queryM := `SELECT watchedDate FROM WatchlistItem_Movie WHERE WatchlistItemId = ? AND userId = ?;`
 	queryT := `SELECT Tag FROM WatchlistItem_Tag WHERE WatchlistItemId = ? AND userId = ?;`
 	queryR := `SELECT RecommendedBy FROM WatchlistItem_Recommended WHERE WatchlistItemId = ? AND userId = ?;`
@@ -262,7 +262,7 @@ func (s *SqlliteStore) getWatchlistMovieOtherData(w *models.WatchlistItemMovie, 
 	}
 }
 
-func (s *SqlliteStore) setWatchlistMovieOtherData(item models.ReqWatchlistItemMovie, watchlistId int, userId int) error {
+func (s *SqliteStore) setWatchlistMovieOtherData(item models.ReqWatchlistItemMovie, watchlistId int, userId int) error {
 	queryM := `INSERT INTO WatchlistItem_Movie (WatchlistItemId, userId, watchedDate) VALUES (?, ?, ?);`
 	queryT := `INSERT INTO WatchlistItem_Tag (WatchlistItemId, userId, Tag) VALUES (?, ?, ?);`
 	queryR := `INSERT INTO WatchlistItem_Recommended (WatchlistItemId, userId, RecommendedBy) VALUES (?, ?, ?);`
@@ -291,7 +291,7 @@ func (s *SqlliteStore) setWatchlistMovieOtherData(item models.ReqWatchlistItemMo
 	return nil
 }
 
-func (s *SqlliteStore) getWatchlistId(filmid int, userid int) int {
+func (s *SqliteStore) getWatchlistId(filmid int, userid int) int {
 	query := `SELECT WatchlistItemId FROM WatchlistItem WHERE FilmId = ? AND UserID = ?;`
 	rows, err := s.db.Query(query, filmid, userid)
 	if err != nil || !rows.Next() {

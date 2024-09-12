@@ -17,7 +17,7 @@ const (
 
 func main() {
 	// ms := storage.NewMemoryStore()
-	ss, _ := storage.NewSqlliteStore("dweep.db")
+	ss, _ := storage.NewSqliteStore("dweep.db")
 	ss.Create()
 
 	// f1 := models.ReqWatchlistItemMovie{

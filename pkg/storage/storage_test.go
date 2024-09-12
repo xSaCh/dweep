@@ -210,7 +210,7 @@ func TestStore(t *testing.T) {
 	// 	testStore_WatchedMovie(t, ms)
 	// })
 
-	ss, err := storage.NewSqlliteStore("test.db")
+	ss, err := storage.NewSqliteStore("test.db")
 
 	assert.NoError(t, err)
 	assert.NoError(t, ss.Create())
