@@ -213,21 +213,21 @@ func TestStore(t *testing.T) {
 	ss, err := storage.NewSqliteStore("test.db")
 
 	assert.NoError(t, err)
-	assert.NoError(t, ss.Create())
+	assert.NoError(t, ss.WLCreate())
 
 	t.Run("SqliteStore", func(t *testing.T) {
 		testStore_AddMovie(t, ss)
 
-		assert.NoError(t, ss.Create())
+		assert.NoError(t, ss.WLCreate())
 		testStore_UpdateMovie(t, ss)
 
-		assert.NoError(t, ss.Create())
+		assert.NoError(t, ss.WLCreate())
 		testStore_RemoveMovie(t, ss)
 
-		assert.NoError(t, ss.Create())
+		assert.NoError(t, ss.WLCreate())
 		testStore_GetMovie(t, ss)
 
-		assert.NoError(t, ss.Create())
+		assert.NoError(t, ss.WLCreate())
 		testStore_WatchedMovie(t, ss)
 
 	})
