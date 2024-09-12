@@ -28,7 +28,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 func (h *Handler) getMovies(w http.ResponseWriter, r *http.Request) error {
 
 	// Get userid from jwt token
-	ms, err := h.storage.GetAllMovies(1)
+	ms, err := h.storage.WLGetAllMovies(1)
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func (h *Handler) getMovie(w http.ResponseWriter, r *http.Request) error {
 		return util.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid movie ID"})
 	}
 
-	m, err := h.storage.GetMovie(id, 1)
+	m, err := h.storage.WLGetMovie(id, 1)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (h *Handler) addMovie(w http.ResponseWriter, r *http.Request) error {
 	}
 	fmt.Printf("[Debug] Adding movie %#v", mov)
 
-	if err := h.storage.AddMovie(mov, id, 1); err != nil {
+	if err := h.storage.WLAddMovie(mov, id, 1); err != nil {
 		return err
 	}
 
@@ -107,7 +107,7 @@ func (h *Handler) updateMovie(w http.ResponseWriter, r *http.Request) error {
 	}
 	fmt.Printf("[Debug] Updating movie %#v", mov)
 
-	if err := h.storage.UpdateMovie(mov, id, 1); err != nil {
+	if err := h.storage.WLUpdateMovie(mov, id, 1); err != nil {
 		return err
 	}
 
@@ -127,7 +127,7 @@ func (h *Handler) deleteMovie(w http.ResponseWriter, r *http.Request) error {
 		return util.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid movie ID"})
 	}
 
-	if err := h.storage.RemoveMovie(id, 1); err != nil {
+	if err := h.storage.WLRemoveMovie(id, 1); err != nil {
 		return err
 	}
 

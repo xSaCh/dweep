@@ -20,7 +20,7 @@ func NewMemoryStore() *MemoryStore {
 		watchlist: []models.WatchlistItem{},
 	}
 }
-func (m *MemoryStore) AddMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error {
+func (m *MemoryStore) WLAddMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error {
 	// Check if filmID is valid or not
 	// item.Id is tmdbId/ImdbId
 
@@ -55,7 +55,7 @@ func (m *MemoryStore) AddMovie(item models.ReqWatchlistItemMovie, filmId int, us
 	return nil
 }
 
-func (m *MemoryStore) UpdateMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error {
+func (m *MemoryStore) WLUpdateMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error {
 	for i, it := range m.mW {
 		if it.FilmId == filmId {
 			if item.MyRating != 0 {
@@ -86,7 +86,7 @@ func (m *MemoryStore) UpdateMovie(item models.ReqWatchlistItemMovie, filmId int,
 	return errors.New(util.ErrorFilmNotFound)
 }
 
-func (m *MemoryStore) RemoveMovie(filmId int, userId int) error {
+func (m *MemoryStore) WLRemoveMovie(filmId int, userId int) error {
 	for i, item := range m.mW {
 		if item.FilmId == filmId {
 			m.mW = append(m.mW[:i], m.mW[i+1:]...)
@@ -96,7 +96,7 @@ func (m *MemoryStore) RemoveMovie(filmId int, userId int) error {
 	return errors.New(util.ErrorFilmNotFound)
 }
 
-func (m *MemoryStore) GetAllMovies(userId int) ([]models.WatchlistItemMovie, error) {
+func (m *MemoryStore) WLGetAllMovies(userId int) ([]models.WatchlistItemMovie, error) {
 	// var movies []models.WatchlistItemMovie
 	// for _, item := range m.mW {
 	// 	if item.UserId == userId {
@@ -106,7 +106,7 @@ func (m *MemoryStore) GetAllMovies(userId int) ([]models.WatchlistItemMovie, err
 	return slices.Clone(m.mW), nil
 }
 
-func (m *MemoryStore) GetMovie(filmId int, userId int) (models.WatchlistItemMovie, error) {
+func (m *MemoryStore) WLGetMovie(filmId int, userId int) (models.WatchlistItemMovie, error) {
 	for _, item := range m.mW {
 		if item.FilmId == filmId {
 			return item, nil
@@ -115,7 +115,7 @@ func (m *MemoryStore) GetMovie(filmId int, userId int) (models.WatchlistItemMovi
 	return models.WatchlistItemMovie{}, errors.New(util.ErrorFilmNotFound)
 }
 
-func (m *MemoryStore) WatchedMovie(filmId int, userId int, watchedDate time.Time) error {
+func (m *MemoryStore) WLWatchedMovie(filmId int, userId int, watchedDate time.Time) error {
 	for i, item := range m.mW {
 		if item.FilmId == filmId {
 			m.mW[i].WatchStatus = models.Watched
@@ -124,4 +124,5 @@ func (m *MemoryStore) WatchedMovie(filmId int, userId int, watchedDate time.Time
 		}
 	}
 	return errors.New(util.ErrorFilmNotFound)
+
 }

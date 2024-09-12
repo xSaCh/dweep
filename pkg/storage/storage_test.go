@@ -46,9 +46,9 @@ func testStore_AddMovie(t *testing.T, ms storage.Storage) {
 	f1, f1I := WatchlistToReq(w1)
 	f2, f2I := WatchlistToReq(w2)
 
-	ms.AddMovie(f1, f1I, 1)
-	ms.AddMovie(f2, f2I, 1)
-	m, err := ms.GetAllMovies(1)
+	ms.WLAddMovie(f1, f1I, 1)
+	ms.WLAddMovie(f2, f2I, 1)
+	m, err := ms.WLGetAllMovies(1)
 
 	assert.NoError(t, err)
 	assert.Len(t, m, 2)
@@ -80,17 +80,17 @@ func testStore_UpdateMovie(t *testing.T, ms storage.Storage) {
 	f1, f1I := WatchlistToReq(w1)
 	f2, f2I := WatchlistToReq(w2)
 
-	assert.NoError(t, ms.AddMovie(f1, f1I, 1))
-	assert.NoError(t, ms.AddMovie(f2, f2I, 1))
+	assert.NoError(t, ms.WLAddMovie(f1, f1I, 1))
+	assert.NoError(t, ms.WLAddMovie(f2, f2I, 1))
 
 	w1.WatchedDates = append(w1.WatchedDates, time.Date(2024, 9, 9, 0, 0, 0, 0, time.UTC))
 	f1.WatchedDates = append(f1.WatchedDates, time.Date(2024, 9, 9, 0, 0, 0, 0, time.UTC))
 
 	w2.WatchStatus = models.Dropped
-	ms.UpdateMovie(f1, f1I, 1)
-	ms.UpdateMovie(f2, f2I, 1)
+	ms.WLUpdateMovie(f1, f1I, 1)
+	ms.WLUpdateMovie(f2, f2I, 1)
 
-	m, err := ms.GetAllMovies(1)
+	m, err := ms.WLGetAllMovies(1)
 	_ = m
 	_ = err
 	assert.Len(t, m, 2)
@@ -124,12 +124,12 @@ func testStore_RemoveMovie(t *testing.T, ms storage.Storage) {
 
 	f2, f2I := WatchlistToReq(w2)
 
-	ms.AddMovie(f1, f1I, 1)
-	ms.AddMovie(f2, f2I, 1)
+	ms.WLAddMovie(f1, f1I, 1)
+	ms.WLAddMovie(f2, f2I, 1)
 
-	ms.RemoveMovie(w1.FilmId, 1)
+	ms.WLRemoveMovie(w1.FilmId, 1)
 
-	m, err := ms.GetAllMovies(1)
+	m, err := ms.WLGetAllMovies(1)
 
 	assert.Len(t, m, 1)
 	assert.NoError(t, err)
@@ -160,9 +160,9 @@ func testStore_GetMovie(t *testing.T, ms storage.Storage) {
 	f1, f1I := WatchlistToReq(w1)
 	f2, f2I := WatchlistToReq(w2)
 
-	ms.AddMovie(f1, f1I, 1)
-	ms.AddMovie(f2, f2I, 1)
-	m, err := ms.GetMovie(f2I, 1)
+	ms.WLAddMovie(f1, f1I, 1)
+	ms.WLAddMovie(f2, f2I, 1)
+	m, err := ms.WLGetMovie(f2I, 1)
 
 	assert.NoError(t, err)
 	assert.Equal(t, w2.FilmId, m.FilmId)
@@ -182,10 +182,10 @@ func testStore_WatchedMovie(t *testing.T, ms storage.Storage) {
 
 	f1, f1I := WatchlistToReq(w1)
 
-	ms.AddMovie(f1, f1I, 1)
-	ms.WatchedMovie(f1I, 1, time.Date(2024, 9, 8, 0, 0, 0, 0, time.UTC))
-	ms.WatchedMovie(f1I, 1, time.Date(2024, 9, 9, 0, 0, 0, 0, time.UTC))
-	m, err := ms.GetMovie(f1I, 1)
+	ms.WLAddMovie(f1, f1I, 1)
+	ms.WLWatchedMovie(f1I, 1, time.Date(2024, 9, 8, 0, 0, 0, 0, time.UTC))
+	ms.WLWatchedMovie(f1I, 1, time.Date(2024, 9, 9, 0, 0, 0, 0, time.UTC))
+	m, err := ms.WLGetMovie(f1I, 1)
 
 	assert.NoError(t, err)
 	assert.Equal(t, w1.FilmId, m.FilmId)

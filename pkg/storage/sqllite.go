@@ -41,7 +41,7 @@ func (s *SqlliteStore) Create() error {
 
 	queryR := `CREATE TABLE WatchlistItem_Recommended ( WatchlistItemId INTEGER, userId INTEGER, RecommendedBy INTEGER,
 		FOREIGN KEY (WatchlistItemId) REFERENCES WatchlistItem(WatchlistItemId));`
-	queryT := `CREATE TABLE WatchlistItem_Tag ( WatchlistItemId INTEGER, userId INTEGER, Tag INTEGER,
+	queryT := `CREATE TABLE WatchlistItem_Tag ( WatchlistItemId INTEGER, userId INTEGER, Tag TEXT,
 		FOREIGN KEY (WatchlistItemId) REFERENCES WatchlistItem(WatchlistItemId));`
 
 	queryM := `CREATE TABLE WatchlistItem_Movie ( WatchlistItemId INTEGER, userId INTEGER, watchedDate DATE,
@@ -72,14 +72,15 @@ func (s *SqlliteStore) Create() error {
 	return nil
 }
 
-func (s *SqlliteStore) AddMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error {
+func (s *SqlliteStore) WLAddMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error {
 	queryW := `INSERT INTO WatchlistItem (UserId, FilmId, Type, MyRating, WatchStatus, Note, AddedOn, UpdatedOn) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`
 
 	if s.getWatchlistId(filmId, userId) != -1 {
 		return fmt.Errorf("movie already exists in watchlist")
 	}
 
-	r, err := s.db.Exec(queryW, userId, filmId, "movie", item.MyRating, item.WatchStatus, item.Note, time.Now(), time.Now())
+	now := time.Now()
+	r, err := s.db.Exec(queryW, userId, filmId, "movie", item.MyRating, item.WatchStatus, item.Note, now, now)
 	if err != nil {
 		return fmt.Errorf("error inserting movie: %v", err)
 	}
@@ -91,7 +92,7 @@ func (s *SqlliteStore) AddMovie(item models.ReqWatchlistItemMovie, filmId int, u
 	return nil
 }
 
-func (s *SqlliteStore) UpdateMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error {
+func (s *SqlliteStore) WLUpdateMovie(item models.ReqWatchlistItemMovie, filmId int, userId int) error {
 	queryW := `UPDATE WatchlistItem SET MyRating = ?, WatchStatus = ?, Note = ?, UpdatedOn = ? WHERE FilmId = ? AND UserID = ?;`
 
 	queryDM := `DELETE FROM WatchlistItem_Movie WHERE WatchlistItemId = ? AND userId = ?;`
@@ -118,7 +119,7 @@ func (s *SqlliteStore) UpdateMovie(item models.ReqWatchlistItemMovie, filmId int
 	}
 	return nil
 }
-func (s *SqlliteStore) RemoveMovie(filmId int, userId int) error {
+func (s *SqlliteStore) WLRemoveMovie(filmId int, userId int) error {
 	queryDW := `DELETE FROM WatchlistItem WHERE WatchlistItemId = ? AND userId = ?;`
 	queryDM := `DELETE FROM WatchlistItem_Movie WHERE WatchlistItemId = ? AND userId = ?;`
 	queryDT := `DELETE FROM WatchlistItem_Tag WHERE WatchlistItemId = ? AND userId = ?;`
@@ -144,7 +145,7 @@ func (s *SqlliteStore) RemoveMovie(filmId int, userId int) error {
 
 	return nil
 }
-func (s *SqlliteStore) GetAllMovies(userId int) ([]models.WatchlistItemMovie, error) {
+func (s *SqlliteStore) WLGetAllMovies(userId int) ([]models.WatchlistItemMovie, error) {
 	query := `SELECT WatchlistItemId, FilmId, Type, MyRating, WatchStatus, Note, AddedOn, UpdatedOn FROM WatchlistItem WHERE UserID = ?;`
 
 	rows, err := s.db.Query(query, userId)
@@ -171,7 +172,7 @@ func (s *SqlliteStore) GetAllMovies(userId int) ([]models.WatchlistItemMovie, er
 
 	return movies, nil
 }
-func (s *SqlliteStore) GetMovie(filmId int, userId int) (models.WatchlistItemMovie, error) {
+func (s *SqlliteStore) WLGetMovie(filmId int, userId int) (models.WatchlistItemMovie, error) {
 	wid := s.getWatchlistId(filmId, userId)
 	if wid == -1 {
 		return models.WatchlistItemMovie{}, fmt.Errorf("movie not found")
@@ -190,7 +191,7 @@ func (s *SqlliteStore) GetMovie(filmId int, userId int) (models.WatchlistItemMov
 	return movie, nil
 }
 
-func (s *SqlliteStore) WatchedMovie(filmId int, userId int, watchedDate time.Time) error {
+func (s *SqlliteStore) WLWatchedMovie(filmId int, userId int, watchedDate time.Time) error {
 	query := `UPDATE WatchlistItem SET WatchStatus = ?, UpdatedOn = ? WHERE FilmId = ? AND UserID = ?;`
 	queryM := `INSERT INTO WatchlistItem_Movie (WatchlistItemId, userId, watchedDate) VALUES (?, ?, ?);`
 
@@ -199,7 +200,7 @@ func (s *SqlliteStore) WatchedMovie(filmId int, userId int, watchedDate time.Tim
 		return fmt.Errorf("movie not found")
 	}
 
-	if _, err := s.db.Exec(query, "watched", time.Now(), filmId, userId); err != nil {
+	if _, err := s.db.Exec(query, models.Watched, time.Now(), filmId, userId); err != nil {
 		return fmt.Errorf("error updating movie to watched: %v", err)
 	}
 
