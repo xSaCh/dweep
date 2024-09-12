@@ -44,14 +44,9 @@ type WatchlistItemMovie struct {
 }
 type WatchlistItemShow struct {
 	WatchlistItem
-	FullyWatchedSeasons []WatchedSeason  `json:"fully_watched_seasons"` // Season_IDs
-	WatchedEpisodes     []WatchedEpisode `json:"watched_episodes"`
+	WatchedEpisodes []WatchedEpisode `json:"watched_episodes"`
 }
 
-type WatchedSeason struct {
-	SeasonId    int64     `json:"season_id"`
-	WatchedDate time.Time `json:"watched_date"`
-}
 type WatchedEpisode struct {
 	EpisodeId   int64     `json:"episode_id"`
 	WatchedDate time.Time `json:"watched_date"`

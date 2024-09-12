@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/xSaCh/dweep/pkg/models"
@@ -23,6 +24,8 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/movie/{id}", util.MakeHTTPHandleFunc(h.addMovie)).Methods(http.MethodPost)
 	router.HandleFunc("/movie/{id}", util.MakeHTTPHandleFunc(h.updateMovie)).Methods(http.MethodPut)
 	router.HandleFunc("/movie/{id}", util.MakeHTTPHandleFunc(h.deleteMovie)).Methods(http.MethodDelete)
+
+	router.HandleFunc("/movie/{id}/watched", util.MakeHTTPHandleFunc(h.watchedMovie)).Methods(http.MethodPost)
 }
 
 func (h *Handler) getMovies(w http.ResponseWriter, r *http.Request) error {
@@ -77,7 +80,7 @@ func (h *Handler) addMovie(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("[Debug] Adding movie %#v", mov)
+	fmt.Printf("[Debug] Adding movie %#v\n", mov)
 
 	if err := h.storage.WLAddMovie(mov, id, 1); err != nil {
 		return err
@@ -105,7 +108,7 @@ func (h *Handler) updateMovie(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("[Debug] Updating movie %#v", mov)
+	fmt.Printf("[Debug] Updating movie %#v\n", mov)
 
 	if err := h.storage.WLUpdateMovie(mov, id, 1); err != nil {
 		return err
@@ -132,6 +135,35 @@ func (h *Handler) deleteMovie(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return util.WriteJSON(w, http.StatusOK, map[string]string{"msg": "movie removed"})
+}
+
+func (h *Handler) watchedMovie(w http.ResponseWriter, r *http.Request) error {
+	// Get userid from jwt token
+	vars := mux.Vars(r)
+	str, ok := vars["id"]
+	if !ok {
+		return util.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "missing movie ID"})
+	}
+
+	id, err := strconv.Atoi(str)
+	if err != nil {
+		return util.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid movie ID"})
+	}
+
+	var watched struct {
+		WatchedDate time.Time `json:"watched_date"`
+	}
+	err = util.ParseJSON(r, &watched)
+	if err != nil {
+		return err
+	}
+
+	if err := h.storage.WLWatchedMovie(id, 1, watched.WatchedDate); err != nil {
+		return err
+	}
+	fmt.Printf("[Debug] Adding watched movie %d at %s\n", id, watched.WatchedDate)
+
+	return util.WriteJSON(w, http.StatusOK, map[string]string{"msg": "movie watched"})
 }
 
 // func (h *Handler) handleCheckout(w http.ResponseWriter, r *http.Request) {

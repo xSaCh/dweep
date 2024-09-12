@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	ext "github.com/xSaCh/dweep/external_apis"
 	"github.com/xSaCh/dweep/pkg"
@@ -34,6 +35,7 @@ func main() {
 	// fmt.Println(string(b))
 
 	// ms.AddMovie(f1, mocks.MovieFilms[0].FilmId, 1)
+	fmt.Printf("time.Now(): %v\n", time.Now().Format(time.RFC3339))
 	ser := pkg.NewAPIServer(fmt.Sprintf("%s:%s", conf.PublicHost, conf.Port), ss)
 	err = ser.Run()
 	if err != nil {
