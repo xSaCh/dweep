@@ -30,3 +30,12 @@ CREATE TABLE WatchlistItem_Movie (
     watchedDate     DATE,
     FOREIGN KEY (WatchlistItemId) REFERENCES WatchlistItem(WatchlistItemId)
 );
+
+    CREATE TABLE WatchlistItem_Show_Ep ( 
+        WatchlistItemId INTEGER,
+        UserId          INTEGER,
+        EpisodeId       INTEGER,
+        watchedDate     DATE,
+        FOREIGN KEY (WatchlistItemId) REFERENCES WatchlistItem(WatchlistItemId)
+    );
+

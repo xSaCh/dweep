@@ -16,6 +16,16 @@ type ReqWatchlistItemMovie struct {
 	WatchedDates []time.Time `json:"watchDates"`
 }
 
+type ReqWatchlistItemShow struct {
+	ReqWatchlistItem
+	Episodes []ReqEpItem `json:"episodes"`
+}
+
+type ReqEpItem struct {
+	EpisodeId   int64     `json:"episodeId"`
+	WatchedDate time.Time `json:"watchedDate"`
+}
+
 // type ReqWatchlistItemShow struct {
 // 	ReqWatchlistItem
 // 	WatchedDates []time.Time

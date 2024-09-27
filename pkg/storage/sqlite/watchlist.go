@@ -198,7 +198,27 @@ func (s *SqliteWLStore) WLWatchedMovie(filmId int, userId int, watchedDate time.
 	}
 
 	if _, err := s.db.Exec(queryM, wid, userId, watchedDate); err != nil {
-		return fmt.Errorf("error inserting movie watched dates: %v", err)
+		return fmt.Errorf("error inserting movie watched date: %v", err)
+	}
+
+	return nil
+}
+
+func (s *SqliteWLStore) WLAddShow(item models.ReqWatchlistItemShow, filmId int, userId int) error {
+	queryW := `INSERT INTO WatchlistItem (UserId, FilmId, Type, MyRating, WatchStatus, Note, AddedOn, UpdatedOn) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`
+
+	if s.getWatchlistId(filmId, userId) != -1 {
+		return fmt.Errorf("show already exists in watchlist")
+	}
+
+	now := time.Now()
+	r, err := s.db.Exec(queryW, userId, filmId, "show", item.MyRating, item.WatchStatus, item.Note, now, now)
+	if err != nil {
+		return fmt.Errorf("error inserting show: %v", err)
+	}
+	wid, _ := r.LastInsertId()
+	if err := s.setWatchlistShowOtherData(item, int(wid), userId); err != nil {
+		return err
 	}
 
 	return nil
@@ -278,6 +298,87 @@ func (s *SqliteWLStore) setWatchlistMovieOtherData(item models.ReqWatchlistItemM
 		_, err := s.db.Exec(queryM, watchlistId, userId, item.WatchedDates[i])
 		if err != nil {
 			return fmt.Errorf("error inserting movie watched dates: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (s *SqliteWLStore) getWatchlistShowOtherData(w *models.WatchlistItemShow, userId int) {
+	queryM := `SELECT EpisodeId,watchedDate FROM WatchlistItem_Show_Ep WHERE WatchlistItemId = ? AND userId = ?;`
+	queryT := `SELECT Tag FROM WatchlistItem_Tag WHERE WatchlistItemId = ? AND userId = ?;`
+	queryR := `SELECT RecommendedBy FROM WatchlistItem_Recommended WHERE WatchlistItemId = ? AND userId = ?;`
+
+	rows, err := s.db.Query(queryM, w.WatchlistItemId, userId)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var eid int
+		var d time.Time
+		err := rows.Scan(&eid, &d)
+		if err != nil {
+			return
+		}
+		w.WatchedEpisodes = append(w.WatchedEpisodes, models.WatchedEpisode{EpisodeId: int64(eid), WatchedDate: d})
+	}
+
+	rows, err = s.db.Query(queryT, w.WatchlistItemId, userId)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var t string
+		err := rows.Scan(&t)
+		if err != nil {
+			return
+		}
+		w.MyTags = append(w.MyTags, t)
+	}
+
+	rows, err = s.db.Query(queryR, w.WatchlistItemId, userId)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var r int
+		err := rows.Scan(&r)
+		if err != nil {
+			return
+		}
+		w.RecommendedBy = append(w.RecommendedBy, int64(r))
+	}
+}
+
+func (s *SqliteWLStore) setWatchlistShowOtherData(item models.ReqWatchlistItemShow, watchlistId int, userId int) error {
+	queryM := `INSERT INTO WatchlistItem_Show_Ep (WatchlistItemId ,userId, episodeId ,watchedDate) VALUES (?, ?, ?, ?);`
+	queryT := `INSERT INTO WatchlistItem_Tag (WatchlistItemId, userId, Tag) VALUES (?, ?, ?);`
+	queryR := `INSERT INTO WatchlistItem_Recommended (WatchlistItemId, userId, RecommendedBy) VALUES (?, ?, ?);`
+
+	for i := range item.MyTags {
+		_, err := s.db.Exec(queryT, watchlistId, userId, item.MyTags[i])
+		if err != nil {
+			return fmt.Errorf("error inserting ep tags: %v", err)
+		}
+	}
+	for i := range item.RecommendedBy {
+		_, err := s.db.Exec(queryR, watchlistId, userId, item.RecommendedBy[i])
+		if err != nil {
+			return fmt.Errorf("error inserting ep recommended by: %v", err)
+		}
+	}
+
+	for i := range item.Episodes {
+		fmt.Printf("[] watched date: %v\n", item.Episodes[i].WatchedDate)
+		_, err := s.db.Exec(queryM, watchlistId, userId, item.Episodes[i].EpisodeId, item.Episodes[i].WatchedDate)
+		if err != nil {
+			return fmt.Errorf("error inserting ep watched date: %v", err)
 		}
 	}
 
